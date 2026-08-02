@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Puantaj Sistemi</title>
+  <link rel="stylesheet" href="styles.css?v=20">
+  <link rel="stylesheet" href="duty-system.css?v=13">
+</head>
+<body>
+  <div class="app" id="screenView">
+    <div class="glass header">
+      <div class="brand-block">
+        <div class="brand-line"><h1><span id="appTitleIcon"></span><span data-i18n="app.title">Puantaj Sistemi</span></h1><div id="systemSwitcher"></div></div>
+        <p id="appSubtitle" data-i18n="app.subtitle">CERRAHİ 1-2 — Haziran 2026</p>
+      </div>
+      <div class="header-actions" id="headerActions"></div>
+    </div>
+
+    <div class="glass" style="padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span id="unitIcon"></span>
+        <div id="unitSelector"></div>
+      </div>
+      <div class="divider-v"></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span id="calendarIcon"></span>
+        <div id="monthSelector"></div>
+      </div>
+      <div style="flex:1"></div>
+      <button class="btn" id="roleBtn" data-i18n="app.roleBtn">Rol</button>
+    </div>
+
+    <div id="workspaceView">
+    <div class="tabs" id="weekTabs" role="tablist"></div>
+
+    <div class="stats-row" id="statsRow"></div>
+
+    <div class="glass" style="padding:16px;margin-bottom:16px">
+      <div class="legend" id="legendContainer"></div>
+      <p style="font-size:11px;color:rgba(255,255,255,0.35)" data-i18n="app.shiftCodes"></p>
+    </div>
+
+    <div class="section-title" id="weekLabel">1. HAFTA</div>
+    <div class="glass table-wrap" id="tableContainer"></div>
+
+    <div class="section-title" id="monthlyLabel" style="margin-top:16px" data-i18n="app.monthlySummary">AYLIK ÖZET</div>
+    <div class="glass table-wrap"><div id="monthlyContainer"></div></div>
+
+    <div id="reportsPanel" style="display:none"></div>
+
+    <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end;flex-wrap:wrap" id="bottomActions"></div>
+
+    <div id="footerBar" style="margin-top:12px;padding:10px 14px;border-radius:8px;background:rgba(255,255,255,0.04);font-size:11px;color:rgba(255,255,255,0.3);text-align:center"></div>
+    </div>
+    <div id="dutySystemView" style="display:none"></div>
+  </div>
+
+  <div id="printView" class="print-view"></div>
+
+  <script type="module" src="main.js?v=24"></script>
+</body>
+</html>

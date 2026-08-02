@@ -1,0 +1,45 @@
+{
+  "name": "personel-puantaj-sistemi",
+  "version": "1.0.0",
+  "description": "Hastane personeli puantaj ve nöbet takip sistemi",
+  "main": "electron-main.cjs",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis",
+    "dist:portable": "electron-builder --win portable"
+  },
+  "devDependencies": {
+    "electron": "^37.2.6",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.puantaj.personel",
+    "productName": "Personel Puantaj Sistemi",
+    "asar": true,
+    "files": [
+      "index.html",
+      "styles.css",
+      "duty-system.css",
+      "*.js",
+      "*.cjs",
+      "*.json",
+      "locales/**/*",
+      "ui/**/*"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": ["nsis", "portable"],
+      "artifactName": "Personel-Puantaj-Sistemi-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Personel Puantaj Sistemi"
+    }
+  }
+}

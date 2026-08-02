@@ -1,0 +1,232 @@
+.brand-block { min-width: 0; flex: 1; text-align: left; }
+#appSubtitle { text-align: left; }
+#monthSelector { text-align: left; }
+#monthSelector > div { justify-content: flex-start; text-align: left; }
+#monthSelector select { text-align: left; text-align-last: left; }
+.brand-line { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.system-switcher { display:flex; align-items:center; gap:7px; }
+.system-switcher-label { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+.system-switcher-buttons { display:flex; gap:4px; padding:3px; border-radius:10px; background:rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.12); }
+.system-tab { min-height:34px; padding:6px 12px; border:0; border-radius:7px; background:transparent; color:rgba(255,255,255,.56); font-family:inherit; font-size:12px; font-weight:500; line-height:1.1; cursor:pointer; transition:all .2s; }
+.system-tab:hover, .system-tab:focus-visible { color:#fff; background:rgba(255,255,255,.1); outline:none; }
+.system-tab.active { color:#0f2732; background:#7dd3fc; box-shadow:0 3px 10px rgba(0,0,0,.16); }
+.duty-system { padding-bottom:16px; }
+.duty-hero { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:16px; padding:22px 24px; border-radius:14px; background:linear-gradient(135deg,rgba(15,34,43,.78),rgba(56,189,248,.18)); border:1px solid rgba(125,211,252,.24); }
+.duty-hero .eyebrow { color:#7dd3fc; font-size:11px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; }
+.duty-hero h2 { margin-top:5px; color:#fff; font-size:24px; font-weight:650; letter-spacing:.2px; }
+.duty-hero p { margin-top:6px; color:rgba(255,255,255,.6); font-size:13px; }
+.duty-moon { display:grid; place-items:center; width:58px; height:58px; flex:0 0 58px; border-radius:50%; color:#fcd34d; background:rgba(252,211,77,.13); border:1px solid rgba(252,211,77,.3); font-size:30px; }
+.duty-hero-actions { display:flex; align-items:center; gap:10px; }
+.duty-print-btn { min-height:42px; white-space:nowrap; }
+.duty-summary { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; margin-bottom:16px; }
+.duty-summary-card { min-height:78px; padding:14px 12px; border-radius:11px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12); }
+.duty-summary-card strong { display:block; color:#f8fafc; font-size:20px; font-weight:650; }
+.duty-summary-card span { display:block; margin-top:6px; color:rgba(255,255,255,.52); font-size:11px; }
+.duty-summary-card.accent { background:rgba(56,189,248,.14); border-color:rgba(56,189,248,.3); }
+.duty-layout { display:grid; grid-template-columns:minmax(300px,.8fr) minmax(0,1.7fr); gap:16px; align-items:start; }
+.duty-form-card, .duty-records-card { padding:18px; }
+.duty-section-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px; }
+.duty-section-heading h3 { color:#fff; font-size:16px; font-weight:600; }
+.duty-section-heading p { margin-top:4px; color:rgba(255,255,255,.5); font-size:12px; line-height:1.45; }
+.duty-record-count { min-width:30px; padding:5px 8px; border-radius:20px; color:#7dd3fc; background:rgba(56,189,248,.15); font-size:12px; text-align:center; }
+.duty-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.duty-form-grid label { display:flex; flex-direction:column; gap:6px; color:rgba(255,255,255,.6); font-size:11px; }
+.duty-form-grid .modal-input { min-width:0; }
+.duty-note-field { grid-column:1/-1; }
+.duty-add-btn { width:100%; justify-content:center; margin-top:14px; min-height:42px; }
+.duty-add-btn:disabled { opacity:.45; cursor:not-allowed; }
+.duty-table-wrap { overflow-x:auto; }
+.duty-table { min-width:760px; }
+.duty-table th { padding:9px 7px; color:rgba(255,255,255,.48); font-size:10px; }
+.duty-table td { padding:10px 7px; color:rgba(255,255,255,.76); font-size:11px; white-space:nowrap; }
+.duty-table td small { display:block; margin-top:2px; color:rgba(255,255,255,.4); font-size:9px; }
+.duty-table .duty-person-col { text-align:left; min-width:145px; }
+.duty-table .duty-person-cell { color:#fff; font-weight:600; text-align:left; }
+.duty-table .duty-net { color:#7dd3fc; font-weight:700; }
+.duty-type { display:inline-block; max-width:150px; padding:4px 7px; overflow:hidden; border-radius:5px; color:#dbeafe; background:rgba(167,139,250,.16); text-overflow:ellipsis; }
+.duty-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:180px; padding:20px; color:rgba(255,255,255,.55); text-align:center; }
+.duty-empty strong { color:#fff; font-size:14px; }
+.duty-empty p { max-width:320px; margin-top:6px; font-size:12px; line-height:1.5; }
+.duty-empty-icon { display:grid; place-items:center; width:44px; height:44px; margin-bottom:10px; border-radius:50%; color:#fcd34d; background:rgba(252,211,77,.12); font-size:25px; }
+.duty-empty-inline { min-height:130px; padding:10px; }
+.duty-print-page { width:min(1480px,calc(100vw - 48px)); min-width:1120px; margin:24px auto; padding:30px; background:#fff; color:#172a33; box-shadow:0 8px 30px rgba(23,42,51,.18); box-sizing:border-box; }
+.duty-print-content { width:100%; }
+.duty-print-header { padding-bottom:16px; border-bottom:2px solid #172a33; text-align:center; }
+.duty-print-header h1 { margin:0; color:#10232c; font-size:24px; letter-spacing:.3px; }
+.duty-print-header p { margin:8px 0 0; color:#52656d; font-size:13px; }
+.duty-print-meta { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:28px; padding:16px 0; color:#172a33; font-size:13px; }
+.duty-print-meta strong { color:#10232c; }
+.duty-print-meta ul { display:flex; flex-wrap:wrap; gap:6px 22px; margin:8px 0 0; padding-left:18px; }
+.duty-print-meta li { margin:0; }
+.duty-print-totals { display:flex; flex-direction:column; gap:4px; padding-left:18px; border-left:1px solid #b8c5ca; }
+.duty-print-table-wrap { overflow-x:auto; }
+.duty-print-table { width:100%; min-width:1120px; border-collapse:collapse; table-layout:fixed; color:#172a33; font-size:13px; }
+.duty-print-table th, .duty-print-table td { border:1px solid #718087; padding:8px 7px; text-align:center; vertical-align:middle; }
+.duty-print-table th { background:#dbe5e9; color:#10232c; font-size:12px; font-weight:700; }
+.duty-print-table th:first-child { width:92px; }
+.duty-print-table th:nth-child(2) { width:98px; }
+.duty-print-table td:first-child, .duty-print-table td:nth-child(2) { white-space:nowrap; font-weight:700; }
+.duty-print-table tr:nth-child(even) td { background:#f6f9fa; }
+.duty-print-table .duty-print-no-record td { color:#718087; }
+.duty-print-person { color:#10232c; font-weight:700; line-height:1.25; }
+.duty-print-person small { display:block; margin-top:2px; color:#52656d; font-size:10px; font-weight:400; }
+.duty-print-empty { color:#a0adb2; }
+.duty-print-approval { margin-top:28px; padding-top:12px; border-top:2px solid #172a33; }
+.duty-print-approval h2 { margin:0 0 36px; color:#10232c; font-size:14px; }
+.duty-print-signatures { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; text-align:center; color:#172a33; font-size:12px; line-height:1.5; }
+[data-theme="light"] .system-switcher-buttons { background:rgba(15,23,42,.08); border-color:rgba(15,23,42,.12); }
+[data-theme="light"] .system-tab { color:rgba(23,32,51,.58); }
+[data-theme="light"] .system-tab.active { color:#12303d; }
+[data-theme="light"] .duty-hero { background:linear-gradient(135deg,rgba(255,255,255,.72),rgba(186,230,253,.58)); border-color:rgba(15,23,42,.12); }
+[data-theme="light"] .duty-hero h2, [data-theme="light"] .duty-section-heading h3, [data-theme="light"] .duty-summary-card strong, [data-theme="light"] .duty-empty strong, [data-theme="light"] .duty-table .duty-person-cell { color:#172033; }
+[data-theme="light"] .duty-hero p, [data-theme="light"] .duty-section-heading p, [data-theme="light"] .duty-summary-card span, [data-theme="light"] .duty-form-grid label { color:rgba(23,32,51,.62); }
+[data-theme="light"] .duty-summary-card { background:rgba(255,255,255,.58); border-color:rgba(15,23,42,.12); }
+[data-theme="light"] .duty-table td { color:#263449; }
+
+@media (max-width:900px) {
+  .duty-layout { grid-template-columns:1fr; }
+}
+@media (max-width:600px) {
+  .brand-line { align-items:flex-start; gap:8px; }
+  .system-switcher { width:100%; }
+  .system-switcher-buttons { width:100%; }
+  .system-tab { flex:1; }
+  .duty-hero { padding:18px; }
+  .duty-hero h2 { font-size:20px; }
+  .duty-moon { width:46px; height:46px; flex-basis:46px; font-size:24px; }
+  .duty-summary { grid-template-columns:repeat(2,1fr); }
+  .duty-summary-card:first-child { grid-column:1/-1; }
+  .duty-form-card, .duty-records-card { padding:14px; }
+}
+
+@media print {
+  @page { size:A4 landscape; margin:3mm; }
+  html, body { background:#fff !important; }
+  html, body { width:100%; height:100%; margin:0 !important; overflow:hidden !important; }
+  .duty-print-page { width:291mm; height:204mm; min-width:0; margin:0; padding:2mm; box-shadow:none; border:0; overflow:hidden; break-inside:avoid; page-break-inside:avoid; }
+  .duty-print-content { width:100%; transform:scale(var(--duty-print-scale,1)); transform-origin:top left; }
+  .duty-print-header { padding-bottom:5px; }
+  .duty-print-header h1 { font-size:17px; }
+  .duty-print-header p { margin-top:3px; font-size:8px; }
+  .duty-print-meta { grid-template-columns:minmax(0,1fr) 210px; gap:10px; padding:5px 0; font-size:8px; }
+  .duty-print-services { gap:2px; margin-top:4px; }
+  .duty-print-target { margin-top:5px; padding-top:4px; }
+  .duty-print-table { min-width:0; font-size:7px; }
+  .duty-print-table th, .duty-print-table td { padding:2px 2px; line-height:1.05; }
+  .duty-print-table th { font-size:7px; }
+  .duty-print-person { line-height:1.05; }
+  .duty-print-person small { margin-top:1px; font-size:6px; }
+  .duty-print-table thead { display:table-header-group; }
+  .duty-print-table tr { page-break-inside:avoid; break-inside:avoid; }
+  .duty-print-approval { margin-top:8px; padding-top:5px; }
+  .duty-print-approval h2 { margin-bottom:8px; font-size:9px; }
+  .duty-print-signatures { gap:12px; font-size:8px; line-height:1.2; }
+}
+
+/* In-app roster mirrors the printable duty list and uses the personnel
+   records already entered in the system instead of sample names. */
+.duty-roster-card { margin-top:16px; padding:18px; }
+.duty-roster-wrap { overflow-x:auto; border:1px solid rgba(255,255,255,.12); border-radius:9px; }
+.duty-roster-table { min-width:980px; table-layout:fixed; }
+.duty-roster-table th { padding:9px 7px; color:rgba(255,255,255,.65); background:rgba(7,25,34,.42); font-size:10px; white-space:normal; line-height:1.25; }
+.duty-roster-table td { min-height:38px; padding:7px 6px; color:rgba(255,255,255,.82); font-size:11px; line-height:1.25; }
+.duty-roster-table th:first-child, .duty-roster-table td:first-child { width:62px; }
+.duty-roster-table th:nth-child(2), .duty-roster-table td:nth-child(2) { width:86px; }
+.duty-roster-date, .duty-roster-day { color:#d9f3ff !important; font-weight:700; white-space:nowrap; }
+.duty-roster-person { display:block; color:#fff; font-weight:650; white-space:normal; }
+.duty-roster-empty { color:rgba(255,255,255,.28); }
+.duty-roster-empty-row td { color:rgba(255,255,255,.42); }
+.duty-roster-table tbody tr:hover td { background:rgba(125,211,252,.08); }
+
+/* Nöbet tablosu da puantajdaki takvim renklerini kullanır. Resmi tatil,
+   hafta sonu renklerinin üzerine çıkar; böylece bayram günü her zaman nettir. */
+.duty-roster-table tbody tr.duty-saturday-row td { background:rgba(56,189,248,.12); }
+.duty-roster-table tbody tr.duty-sunday-row td { background:rgba(255,170,50,.14); }
+.duty-roster-table tbody tr.duty-holiday-row td { background:rgba(255,100,100,.16); }
+.duty-roster-table tbody tr.duty-saturday-row .duty-roster-date,
+.duty-roster-table tbody tr.duty-saturday-row .duty-roster-day { color:#7dd3fc !important; }
+.duty-roster-table tbody tr.duty-sunday-row .duty-roster-date,
+.duty-roster-table tbody tr.duty-sunday-row .duty-roster-day { color:#ffd080 !important; }
+.duty-roster-table tbody tr.duty-holiday-row .duty-roster-date,
+.duty-roster-table tbody tr.duty-holiday-row .duty-roster-day { color:#ffaaaa !important; }
+.duty-roster-table tbody tr.duty-saturday-row .duty-cell-select { border-color:rgba(56,189,248,.5); background:rgba(9,48,62,.78); }
+.duty-roster-table tbody tr.duty-sunday-row .duty-cell-select { border-color:rgba(255,170,50,.5); background:rgba(66,46,15,.72); }
+.duty-roster-table tbody tr.duty-holiday-row .duty-cell-select { border-color:rgba(255,100,100,.55); background:rgba(70,28,32,.72); }
+
+/* The separate preview window uses a white paper surface with strong ink
+   colors, comfortable spacing, and horizontal scrolling for wide rosters. */
+.duty-print-page { border:1px solid #d1dce0; }
+.duty-print-meta { background:#fff; }
+.duty-print-target { margin-top:10px; padding-top:9px; border-top:1px solid #b8c5ca; color:#172a33; font-weight:700; }
+.duty-print-services { display:grid; gap:4px; margin-top:8px; }
+.duty-print-services span { color:#263f49; }
+.duty-print-table th { word-break:normal; overflow-wrap:anywhere; }
+.duty-print-table tbody tr.duty-print-saturday-row td { background:#e3f5fb; }
+.duty-print-table tbody tr.duty-print-sunday-row td { background:#fff1d6; }
+.duty-print-table tbody tr.duty-print-holiday-row td { background:#ffe2e2; }
+.duty-print-table tbody tr.duty-print-saturday-row td,
+.duty-print-table tbody tr.duty-print-sunday-row td,
+.duty-print-table tbody tr.duty-print-holiday-row td { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+.duty-print-table tbody tr.duty-print-saturday-row td:first-child,
+.duty-print-table tbody tr.duty-print-saturday-row td:nth-child(2) { color:#126782; }
+.duty-print-table tbody tr.duty-print-sunday-row td:first-child,
+.duty-print-table tbody tr.duty-print-sunday-row td:nth-child(2) { color:#8a5a00; }
+.duty-print-table tbody tr.duty-print-holiday-row td:first-child,
+.duty-print-table tbody tr.duty-print-holiday-row td:nth-child(2) { color:#a33a3a; }
+
+@media screen and (max-width:900px) {
+  .duty-roster-card { padding:14px; }
+  .duty-roster-table { min-width:900px; }
+}
+
+@media print {
+  .duty-print-page { border:0; }
+  .duty-print-target { margin-top:6px; padding-top:5px; }
+}
+
+/* Roster-first duty planning: each cell is assigned from registered personnel. */
+.duty-columns-card { margin-top:16px; padding:18px; }
+.duty-column-form { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto; gap:10px; align-items:end; }
+.duty-column-form label { display:flex; flex-direction:column; gap:6px; color:rgba(255,255,255,.62); font-size:11px; }
+.duty-column-form .btn { min-height:42px; justify-content:center; }
+.duty-column-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:8px; margin-top:14px; }
+.duty-column-row { display:flex; align-items:center; gap:8px; min-height:52px; padding:8px 10px; border:1px solid rgba(255,255,255,.12); border-radius:8px; background:rgba(255,255,255,.05); }
+.duty-column-order { flex:0 0 auto; min-width:42px; color:#7dd3fc; font-size:10px; font-weight:700; text-transform:uppercase; }
+.duty-column-info { min-width:0; flex:1; }
+.duty-column-row strong { display:block; overflow:hidden; color:#fff; font-size:12px; text-overflow:ellipsis; white-space:nowrap; }
+.duty-column-row small { display:block; margin-top:3px; color:#7dd3fc; font-size:11px; }
+.duty-column-actions { display:flex; flex:0 0 auto; gap:4px; }
+.duty-column-actions .action-btn { width:30px; height:30px; font-size:15px; }
+.duty-column-actions .action-btn:disabled { opacity:.25; cursor:not-allowed; }
+.duty-column-row.is-editing { align-items:flex-start; }
+.duty-column-edit-form { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto; gap:6px; align-items:center; flex:1; min-width:0; }
+.duty-column-edit-form .modal-input { min-width:0; padding:7px 9px; font-size:12px; }
+.duty-column-edit-actions { display:flex; gap:5px; }
+.duty-column-edit-actions .btn { min-height:34px; padding:6px 9px; font-size:11px; white-space:nowrap; }
+[data-theme="light"] .duty-column-order { color:#126782; }
+.duty-roster-table { min-width:1160px; table-layout:fixed; }
+.duty-roster-table th { min-width:185px; }
+.duty-roster-table th:first-child { min-width:70px; width:70px; }
+.duty-roster-table th:nth-child(2) { min-width:100px; width:100px; }
+.duty-roster-table td { height:48px; padding:4px; }
+.duty-cell-select { width:100%; min-width:0; min-height:36px; padding:6px 5px; border:1px solid rgba(125,211,252,.22); border-radius:6px; background:rgba(9,34,44,.65); color:#fff; font:600 11px/1.2 inherit; }
+.duty-cell-select:focus-visible { outline:2px solid #7dd3fc; outline-offset:1px; }
+.duty-cell-select:disabled { opacity:.9; cursor:not-allowed; }
+.duty-holiday-row td { background:rgba(251,191,36,.08); }
+.duty-no-personnel { margin-top:16px; padding:26px; color:rgba(255,255,255,.62); text-align:center; }
+.duty-no-personnel strong { color:#fff; font-size:15px; }
+.duty-no-personnel p { margin-top:6px; font-size:12px; }
+[data-theme="light"] .duty-column-form label { color:rgba(23,32,51,.62); }
+[data-theme="light"] .duty-column-row { background:rgba(255,255,255,.65); border-color:rgba(15,23,42,.12); }
+[data-theme="light"] .duty-column-row strong { color:#172033; }
+[data-theme="light"] .duty-cell-select { color:#172033; background:#fff; border-color:rgba(15,23,42,.18); }
+[data-theme="light"] .duty-no-personnel strong { color:#172033; }
+
+@media (max-width:600px) {
+  .duty-column-form { grid-template-columns:1fr; }
+  .duty-column-form .btn { width:100%; }
+  .duty-columns-card { padding:14px; }
+  .duty-column-edit-form { grid-template-columns:1fr; }
+  .duty-column-edit-actions .btn { flex:1; }
+  .duty-roster-table { min-width:1080px; }
+}

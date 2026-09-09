@@ -1,0 +1,108 @@
+/* Personnel directory and unit-specific duty setup */
+.directory-modal { width:min(1100px,96vw); max-width:none; max-height:88vh; overflow:hidden; }
+.directory-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+.directory-heading .modal-title { margin-bottom:4px; }
+.directory-unit { color:rgba(255,255,255,.52); font-size:12px; }
+.directory-tools { display:flex; align-items:center; gap:10px; margin:14px 0; }
+.directory-search-label { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+.directory-tools .modal-input { max-width:360px; }
+.directory-tools .btn { white-space:nowrap; }
+.directory-count { margin-left:auto; color:rgba(255,255,255,.5); font-size:11px; white-space:nowrap; }
+.directory-print { white-space:nowrap; }
+.directory-table-wrap { overflow:auto; max-height:58vh; border:1px solid rgba(255,255,255,.1); border-radius:9px; }
+.directory-table { min-width:900px; table-layout:auto; }
+.directory-table th { position:sticky; top:0; z-index:1; background:#16333d; color:rgba(255,255,255,.7); }
+.directory-table td { vertical-align:middle; }
+.directory-table .directory-name { color:#fff; font-weight:600; white-space:nowrap; }
+.directory-name small { display:block; margin-top:3px; color:rgba(255,255,255,.42); font-size:10px; font-weight:400; }
+.directory-empty { color:rgba(255,255,255,.28); }
+.directory-edit { padding:6px 10px; font-size:11px; white-space:nowrap; }
+.directory-no-results { padding:24px !important; color:rgba(255,255,255,.5); text-align:center; }
+.directory-hint { margin-top:10px; color:rgba(255,255,255,.4); font-size:11px; }
+.personnel-import-overlay, .duty-import-overlay { z-index:1200; }
+.personnel-import-modal, .duty-import-modal { width:min(860px,96vw); max-width:none; max-height:88vh; overflow:hidden; }
+.personnel-import-drop { display:flex; align-items:center; gap:10px; margin:16px 0 8px; flex-wrap:wrap; }
+.personnel-import-drop span { color:rgba(255,255,255,.55); font-size:12px; }
+.personnel-import-table-wrap { max-height:43vh; }
+.personnel-import-table { min-width:980px; }
+.personnel-import-table .import-cell { min-width:110px; padding:7px 8px; font-size:11px; }
+.personnel-import-table select.import-cell { min-width:120px; }
+.personnel-import-edit-hint { color:rgba(125,211,252,.82); font-size:11px; line-height:1.45; margin:4px 0 8px; }
+.personnel-map-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; padding:10px; margin:8px 0 12px; border:1px solid rgba(255,255,255,.1); border-radius:10px; background:rgba(255,255,255,.035); }
+.personnel-map-field { display:flex; flex-direction:column; gap:4px; min-width:0; }
+.personnel-map-field span { color:rgba(255,255,255,.55); font-size:10px; line-height:1.25; }
+.personnel-map-field .modal-input { width:100%; min-width:0; padding:7px 8px; font-size:11px; }
+.duty-import-table { min-width:720px; }
+.duty-import-table .import-cell { min-width:210px; padding:7px 8px; font-size:11px; }
+.duty-import-modal .advanced-form-grid { align-items:center; }
+.duty-import-modal .advanced-form-grid label { justify-content:center; }
+.contact-modal { width:min(560px,96vw); max-height:82vh; display:flex; flex-direction:column; }
+.contact-list { overflow-y:auto; flex:1; padding-right:4px; }
+.contact-card-name { font-size:14px; color:#fff; font-weight:600; margin-bottom:8px; }
+.contact-card-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.contact-value { display:flex; flex-direction:column; gap:2px; min-width:0; font-size:11px; color:rgba(255,255,255,.5); }
+.contact-value strong { overflow-wrap:anywhere; color:rgba(255,255,255,.82); font-size:12px; font-weight:500; }
+.contact-value-wide { grid-column:1/-1; }
+.contact-empty { color:rgba(255,255,255,.45); font-size:13px; text-align:center; padding:20px; }
+[data-theme="light"] .personnel-import-drop span { color:rgba(23,32,51,.62); }
+[data-theme="light"] .contact-card-name { color:#172033; }
+[data-theme="light"] .contact-value { color:rgba(23,32,51,.56); }
+[data-theme="light"] .contact-value strong { color:#263449; }
+[data-theme="light"] .contact-empty { color:rgba(23,32,51,.5); }
+.duty-no-columns { padding:18px; margin-bottom:16px; border-left:3px solid rgba(56,189,248,.55); }
+.duty-no-columns strong { color:#dff7ff; font-size:13px; }
+.duty-no-columns p { margin-top:6px; color:rgba(255,255,255,.55); font-size:12px; line-height:1.5; }
+[data-theme="light"] .directory-unit, [data-theme="light"] .directory-count, [data-theme="light"] .directory-hint { color:rgba(23,32,51,.62); }
+[data-theme="light"] .directory-table th { background:#dbeafe; color:#263449; }
+[data-theme="light"] .directory-table .directory-name { color:#172033; }
+[data-theme="light"] .directory-name small { color:rgba(23,32,51,.55); }
+[data-theme="light"] .directory-empty { color:rgba(23,32,51,.35); }
+[data-theme="light"] .duty-no-columns strong { color:#173c4b; }
+[data-theme="light"] .duty-no-columns p { color:rgba(23,32,51,.62); }
+
+/* The directory is a workspace, not a full-screen popup: keep the desktop
+   navigation visible and reserve the right pane for directory operations. */
+@media (min-width: 901px) {
+  .directory-overlay {
+    inset: 0 0 0 264px;
+    align-items: stretch;
+    justify-content: stretch;
+    padding: 18px;
+    background: rgba(3, 20, 25, .18);
+  }
+  .directory-overlay .directory-modal {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    margin: 0;
+  }
+}
+
+@media (min-width: 701px) and (max-width: 900px) {
+  .directory-overlay {
+    inset: 0 0 0 240px;
+    align-items: stretch;
+    justify-content: stretch;
+    padding: 12px;
+    background: rgba(3, 20, 25, .18);
+  }
+  .directory-overlay .directory-modal {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    margin: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .directory-modal { width:calc(100vw - 20px); padding:16px; }
+  .directory-tools { align-items:stretch; flex-direction:column; }
+  .directory-tools .modal-input { max-width:none; }
+  .directory-count { margin-left:0; }
+  .directory-tools .btn { width:100%; justify-content:center; }
+  .personnel-import-modal, .duty-import-modal { width:calc(100vw - 20px); padding:16px; }
+  .personnel-map-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .contact-card-grid { grid-template-columns:1fr; }
+  .contact-value-wide { grid-column:auto; }
+  .duty-import-modal .advanced-form-grid { grid-template-columns:1fr; }
+}

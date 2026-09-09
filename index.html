@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Personel Nöbet + Puantaj Sistemi</title>
+  <link rel="stylesheet" href="styles.css?v=24">
+  <link rel="stylesheet" href="duty-system.css?v=22">
+  <link rel="stylesheet" href="directory.css?v=5">
+  <link rel="stylesheet" href="availability.css?v=2">
+  <link rel="stylesheet" href="onboarding.css?v=1">
+  <link rel="stylesheet" href="polish.css?v=6">
+  <link rel="stylesheet" href="dashboard.css?v=3">
+</head>
+<body>
+  <div class="app" id="screenView">
+    <div class="app-layout">
+      <aside class="sidebar" id="sidebar" aria-label="Sol menü"></aside>
+      <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+      <main class="app-content">
+        <div class="glass period-bar">
+          <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Menüyü aç">☰</button>
+          <div class="period-control"><span id="unitIcon" aria-hidden="true"></span><div id="unitSelector"></div></div>
+          <div class="divider-v"></div>
+          <div class="period-control"><span id="calendarIcon" aria-hidden="true"></span><div id="monthSelector"></div></div>
+          <div class="period-spacer"></div>
+          <button class="btn" id="roleBtn" data-i18n="app.roleBtn">Rol</button>
+        </div>
+        <span id="appSubtitle" hidden aria-hidden="true"></span>
+        <div id="headerActions" hidden aria-hidden="true"></div>
+        <div id="viewToolbar" class="view-toolbar" data-i18n-aria-label="app.viewActions"></div>
+        <div id="onboardingView" aria-live="polite"></div>
+        <div id="dashboardView" aria-live="polite"></div>
+        <div id="workspaceView">
+          <div class="tabs" id="weekTabs" role="tablist"></div>
+          <div class="glass legend-panel"><div class="legend" id="legendContainer"></div><p class="legend-help" data-i18n="app.shiftCodes"></p></div>
+          <div class="section-title" id="weekLabel">1. HAFTA</div>
+          <div class="glass table-wrap" id="tableContainer"></div>
+          <div class="section-title" id="monthlyLabel" style="margin-top:16px" data-i18n="app.monthlySummary">AYLIK ÖZET</div>
+          <div class="glass table-wrap"><div id="monthlyContainer"></div></div>
+          <div id="reportsPanel" style="display:none"></div>
+          <div id="bottomActions" class="legacy-actions" aria-hidden="true"></div>
+          <div id="footerBar" class="footer-bar"></div>
+        </div>
+        <div id="dutySystemView" style="display:none"></div>
+      </main>
+    </div>
+  </div>
+  <div id="printView" class="print-view"></div>
+  <script type="module" src="main.js?v=44"></script>
+</body>
+</html>

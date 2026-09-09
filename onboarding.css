@@ -1,0 +1,10 @@
+.onboarding-card { position:relative; display:grid; grid-template-columns:1fr auto; gap:10px 18px; padding:16px 18px; margin-bottom:16px; border-color:rgba(56,189,248,.28); background:linear-gradient(120deg,rgba(56,189,248,.12),rgba(255,255,255,.06)); }
+.onboarding-kicker { color:#7dd3fc; font-size:10px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; }
+.onboarding-card h2 { margin-top:4px; color:#fff; font-size:16px; font-weight:600; }
+.onboarding-card p { margin-top:5px; color:rgba(255,255,255,.62); font-size:12px; line-height:1.5; }
+.onboarding-card ol { grid-column:1 / -1; display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding-left:20px; color:rgba(255,255,255,.75); font-size:12px; line-height:1.45; }
+.onboarding-card li { padding:9px 10px; border-radius:8px; background:rgba(255,255,255,.06); }
+.onboarding-card #onboardingClose { justify-self:start; }
+[data-theme="light"] .onboarding-card h2 { color:#172033; }
+[data-theme="light"] .onboarding-card p, [data-theme="light"] .onboarding-card ol { color:#334155; }
+@media (max-width:700px) { .onboarding-card { grid-template-columns:1fr auto; } .onboarding-card ol { grid-template-columns:1fr; } }

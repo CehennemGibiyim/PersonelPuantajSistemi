@@ -1,6 +1,6 @@
 PERSONEL NÖBET + PUANTAJ SİSTEMİ
-Build ID: puantaj-20260920013009176
-Oluşturulma: 2026-09-20T01:30:09.176Z
+Build ID: puantaj-20260920014008614
+Oluşturulma: 2026-09-20T01:40:08.614Z
 Kaynak modu: preview-workspace
 Kaynak dosyası: 88
 Başlangıç: index.html → main.js

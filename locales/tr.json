@@ -197,7 +197,8 @@
     "draftFailed": "Taslak oluşturulamadı; uygun personel bulunamadı.",
     "draftCreated": "Uygunluklara göre dengeli nöbet taslağı oluşturuldu.",
     "defaultService1": "CERRAHİ-1 SERVİSİ",
-    "defaultService2": "CERRAHİ-2 SERVİSİ"
+    "defaultService2": "CERRAHİ-2 SERVİSİ",
+    "defaultTemplateName": "Hazır Nöbet Listesi"
   },
   "modal": {
     "editTitle": "Personel Düzenle",

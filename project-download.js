@@ -318,7 +318,11 @@ function fileByName(files, name) {
 }
 
 function assertCurrentProjectSources(files) {
-  const required = ['index.html', 'main.js', 'electron-main.cjs', 'electron-preload.cjs', 'package.json'];
+  const required = [
+    'index.html', 'main.js', 'electron-main.cjs', 'electron-preload.cjs', 'package.json',
+    'duty-template-state.js', 'ui/duty-roster-utils.js', 'ui/duty-system-view.js',
+    'ui/duty-template-panel-view.js', 'ui/templates-workspace-view.js', 'locales/tr.json', 'locales/en.json'
+  ];
   const missing = required.filter(name => !fileByName(files, name));
   if (missing.length) throw new Error(`Eksik proje dosyaları: ${missing.join(', ')}`);
 
@@ -343,6 +347,24 @@ function assertCurrentProjectSources(files) {
   const failed = checks.filter(([, label], index) => !checks[index][0].test(sources[index])).map(([, label]) => label);
   if (failed.length) {
     throw new Error(`Güncel başlangıç dosyası doğrulanamadı: ${failed.join(', ')}`);
+  }
+
+  const templateState = fileByName(files, 'duty-template-state.js').text;
+  const rosterUtils = fileByName(files, 'ui/duty-roster-utils.js').text;
+  const dutyView = fileByName(files, 'ui/duty-system-view.js').text;
+  const trLocale = fileByName(files, 'locales/tr.json').text;
+  const enLocale = fileByName(files, 'locales/en.json').text;
+  const templateChecks = [
+    [/export\s+async\s+function\s+initDutyTemplates\s*\(/, templateState, 'nöbet şablonu başlatma kodu'],
+    [/defaultDutyColumns\s*\(/, rosterUtils, 'hazır nöbet sütunları'],
+    [/defaultTemplateName/, templateState, 'hazır nöbet şablonu adı'],
+    [/latestTemplate/, dutyView, 'hazır şablonun nöbet ekranına bağlanması'],
+    [/defaultTemplateName/, trLocale, 'Türkçe hazır şablon metni'],
+    [/defaultTemplateName/, enLocale, 'İngilizce hazır şablon metni']
+  ];
+  const missingTemplateChecks = templateChecks.filter(([pattern, source]) => !pattern.test(source)).map(([, , label]) => label);
+  if (missingTemplateChecks.length) {
+    throw new Error(`Hazır nöbet şablonu doğrulanamadı: ${missingTemplateChecks.join(', ')}`);
   }
 }
 

@@ -1,7 +1,7 @@
 {
   "format": 1,
-  "buildId": "puantaj-20260920013009176",
-  "createdAt": "2026-09-20T01:30:09.176Z",
+  "buildId": "puantaj-20260920014008614",
+  "createdAt": "2026-09-20T01:40:08.614Z",
   "entryPoint": "index.html → main.js",
   "sourceMode": "preview-workspace",
   "projectFileCount": 88,
@@ -138,8 +138,8 @@
     },
     {
       "path": "duty-template-state.js",
-      "bytes": 2569,
-      "sha256": "2cb227b8e0e12435f69194894192b3ce84aea46c9bc8e12da5b29325869d5cdb"
+      "bytes": 3168,
+      "sha256": "1a409c7d15ae7afab6f19f79faa1bf305fe4ff2b398ca1e0e2e060dc32b6895a"
     },
     {
       "path": "period-lock-state.js",
@@ -218,13 +218,13 @@
     },
     {
       "path": "locales/tr.json",
-      "bytes": 40206,
-      "sha256": "584baaccb07ede74f0adddd834e1ef131547b02e7138e6648289c216fc7f57be"
+      "bytes": 40258,
+      "sha256": "2dff9f5088ff6a65bc128e6fa95952beb836312ea65712c83f9578153793ca57"
     },
     {
       "path": "locales/en.json",
-      "bytes": 37977,
-      "sha256": "421bf7891d4892750316e2f9ab0c032628e0ec06884c188a349491d828d75b85"
+      "bytes": 38023,
+      "sha256": "b41faade8bf493066caba39c53867ec3c334666b9775159d40e5fa38f68c8d58"
     },
     {
       "path": "ui/admin-modal-view.js",
@@ -443,8 +443,8 @@
     },
     {
       "path": "project-download.js",
-      "bytes": 14962,
-      "sha256": "0b1a10725e26ee35a8410d0053a5ba390e6410917de3899878e8aa7898018cdd"
+      "bytes": 16295,
+      "sha256": "b2af83b167f7bd7c45a8f5bb5dbe6fd406b8a5b12dedb168b797223bec72c925"
     }
   ]
 }

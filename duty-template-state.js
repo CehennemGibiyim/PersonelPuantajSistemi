@@ -1,10 +1,11 @@
 import { loadState, saveState } from './storage.js';
 import { getCurrentUnitId } from './state.js';
-import { uid } from './utils.js';
-import { normalizeColumns } from './ui/duty-roster-utils.js';
+import { uid, t } from './utils.js';
+import { defaultDutyColumns, normalizeColumns } from './ui/duty-roster-utils.js';
 
 let templates = [];
 let loadedUnit = '';
+const DEFAULT_TEMPLATE_ID = 'duty_tpl_default_roster';
 
 function storageKey() {
   return `puantaj_${getCurrentUnitId()}_duty_templates`;
@@ -23,14 +24,36 @@ function cleanTemplate(item) {
   };
 }
 
+function createDefaultTemplate() {
+  const columns = normalizeColumns(defaultDutyColumns());
+  if (!columns.length) return null;
+  const now = new Date().toISOString();
+  return {
+    id: DEFAULT_TEMPLATE_ID,
+    name: t('dutySystem.defaultTemplateName'),
+    columns,
+    createdAt: now,
+    updatedAt: now
+  };
+}
+
 export async function initDutyTemplates() {
   const unitId = getCurrentUnitId();
   if (!unitId || loadedUnit === unitId) return;
+  let saved = null;
   try {
-    const saved = await loadState(storageKey());
-    templates = Array.isArray(saved) ? saved.map(cleanTemplate).filter(Boolean) : [];
+    saved = await loadState(storageKey());
   } catch {
-    templates = [];
+    saved = null;
+  }
+  const hasSavedTemplates = Array.isArray(saved);
+  templates = hasSavedTemplates ? saved.map(cleanTemplate).filter(Boolean) : [];
+  if (!hasSavedTemplates) {
+    const starter = createDefaultTemplate();
+    if (starter) {
+      templates = [starter];
+      persist();
+    }
   }
   loadedUnit = unitId;
 }

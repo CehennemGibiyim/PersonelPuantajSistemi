@@ -197,7 +197,8 @@
     "draftFailed": "The draft could not be created because no suitable personnel were available.",
     "draftCreated": "A balanced duty draft was created using availability data.",
     "defaultService1": "SURGERY-1 SERVICE",
-    "defaultService2": "SURGERY-2 SERVICE"
+    "defaultService2": "SURGERY-2 SERVICE",
+    "defaultTemplateName": "Ready Duty List"
   },
   "modal": {
     "editTitle": "Edit Personnel",

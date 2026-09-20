@@ -18,6 +18,23 @@ function backupKey() {
   return `puantaj_backup_${getCurrentUnitId()}`;
 }
 
+const MAX_BACKUPS = 10;
+const MAX_BACKUP_BYTES = 850000;
+
+function backupStoragePath() {
+  return backupKey();
+}
+
+function backupFileName(item) {
+  const unit = String(item?.label || getUnitName()).split(' — ')[0]
+    .replace(/[^\p{L}\p{N}_-]+/gu, '-')
+    .replace(/^-+|-+$/g, '') || 'birim';
+  const year = Number(item?.year) || getYear();
+  const month = String((Number(item?.month) || 0) + 1).padStart(2, '0');
+  const stamp = calendarDay(item?.createdAt).replace(/-/g, '') || 'yedek';
+  return `puantaj-${unit}-${year}-${month}-${stamp}.json`;
+}
+
 function getMonthLabel(y, m) {
   return `${MONTHS_TR[m]} ${y}`;
 }
@@ -91,48 +108,76 @@ function renderChart(container, history) {
 
 function calculateFairness() {
   const personnel = getPersonnelList();
-  if (personnel.length < 2) return [];
-
   const data = personnel.map(name => ({
     name,
+    worked: getMonthlyTotal(name, 'worked'),
     night: getTotalNightHours(name),
     extra: getMonthlyTotal(name, 'extra')
   }));
-
-  const avgNight = data.reduce((sum, p) => sum + p.night, 0) / data.length;
-  const avgExtra = data.reduce((sum, p) => sum + p.extra, 0) / data.length;
-
+  const avgNight = data.length ? data.reduce((sum, person) => sum + person.night, 0) / data.length : 0;
+  const avgExtra = data.length ? data.reduce((sum, person) => sum + person.extra, 0) / data.length : 0;
   const warnings = [];
-  data.forEach(p => {
+
+  data.forEach(person => {
+    const signals = [];
     if (avgNight > 0) {
-      const ratio = p.night / avgNight;
-      if (ratio >= 1.5) warnings.push({ type: 'high', person: p.name, field: t('reports.fieldNight'), ratio: ratio.toFixed(1) });
-      else if (ratio <= 0.5 && p.night > 0) warnings.push({ type: 'low', person: p.name, field: t('reports.fieldNight'), ratio: ratio.toFixed(1) });
+      const ratio = person.night / avgNight;
+      if (ratio >= 1.5) signals.push('high');
+      else if (ratio <= 0.5 && person.night > 0) signals.push('low');
+      if (ratio >= 1.5 || (ratio <= 0.5 && person.night > 0)) {
+        warnings.push({ type: ratio >= 1.5 ? 'high' : 'low', person: person.name, field: t('reports.fieldNight'), ratio: ratio.toFixed(1) });
+      }
     }
     if (avgExtra > 0) {
-      const ratio = p.extra / avgExtra;
-      if (ratio >= 1.5) warnings.push({ type: 'high', person: p.name, field: t('reports.fieldExtra'), ratio: ratio.toFixed(1) });
-      else if (ratio <= 0.5 && p.extra > 0) warnings.push({ type: 'low', person: p.name, field: t('reports.fieldExtra'), ratio: ratio.toFixed(1) });
+      const ratio = person.extra / avgExtra;
+      if (ratio >= 1.5) signals.push('high');
+      else if (ratio <= 0.5 && person.extra > 0) signals.push('low');
+      if (ratio >= 1.5 || (ratio <= 0.5 && person.extra > 0)) {
+        warnings.push({ type: ratio >= 1.5 ? 'high' : 'low', person: person.name, field: t('reports.fieldExtra'), ratio: ratio.toFixed(1) });
+      }
     }
+    person.status = signals.includes('high') ? 'high' : signals.includes('low') ? 'low' : 'balanced';
   });
 
-  return warnings;
+  return { data, avgNight, avgExtra, warnings };
 }
 
 function renderFairness(container) {
-  const items = calculateFairness();
-  if (!items.length) {
-    container.innerHTML = `<p style="font-size:12px;color:rgba(255,255,255,0.4);text-align:center;padding:14px">${t('reports.fairnessBalanced')}</p>`;
+  const analysis = calculateFairness();
+  const { data, avgNight, avgExtra, warnings } = analysis;
+  const statusKey = status => status === 'high' ? 'reports.fairnessHigh' : status === 'low' ? 'reports.fairnessLow' : 'reports.fairnessBalanced';
+
+  if (!data.length) {
+    container.innerHTML = `<div class="fairness-empty">${t('reports.fairnessNoData')}</div>`;
     return;
   }
 
-  container.innerHTML = items.map(item => `
-    <div class="warning-item ${item.type === 'high' ? 'warning-overtime' : 'warning-rest'}" style="padding:10px;border-radius:8px;background:rgba(255,255,255,0.05);margin-bottom:6px;font-size:12px;color:rgba(255,255,255,0.85)">
-      ${item.type === 'high'
-        ? t('reports.fairnessDetailHigh', { name: item.person, field: item.field, ratio: item.ratio })
-        : t('reports.fairnessDetailLow', { name: item.person, field: item.field, ratio: item.ratio })}
+  container.innerHTML = `
+    <div class="fairness-stats" aria-label="${esc(t('reports.fairnessTitle'))}">
+      <div class="fairness-stat accent"><strong>${data.length}</strong><span>${t('reports.fairnessPeople')}</span></div>
+      <div class="fairness-stat"><strong>${avgNight.toFixed(1)}</strong><span>${t('reports.fairnessAverageNight')}</span></div>
+      <div class="fairness-stat"><strong>${avgExtra.toFixed(1)}</strong><span>${t('reports.fairnessAverageExtra')}</span></div>
+      <div class="fairness-stat"><strong>${warnings.length}</strong><span>${t('reports.fairnessWarningCount')}</span></div>
     </div>
-  `).join('');
+    <div class="fairness-table-wrap">
+      <table class="fairness-table">
+        <thead><tr><th>${t('app.nameCol')}</th><th>${t('app.totalHours')}</th><th>${t('app.nightShift')}</th><th>${t('app.overtime')}</th><th>${t('reports.fairnessStatus')}</th></tr></thead>
+        <tbody>${data.map(person => `
+          <tr>
+            <td class="fairness-person">${esc(person.name)}</td>
+            <td>${person.worked}</td>
+            <td>${person.night}</td>
+            <td>${person.extra}</td>
+            <td><span class="fairness-status is-${person.status}">${esc(t(statusKey(person.status)))}</span></td>
+          </tr>
+        `).join('')}</tbody>
+      </table>
+    </div>
+    <div class="fairness-alerts">
+      <span class="fairness-alerts-title">${t('reports.fairnessAlerts')}</span>
+      ${warnings.length ? warnings.map(item => `<div class="fairness-alert is-${item.type}">${esc(item.type === 'high' ? t('reports.fairnessDetailHigh', { name: item.person, field: item.field, ratio: item.ratio }) : t('reports.fairnessDetailLow', { name: item.person, field: item.field, ratio: item.ratio }))}</div>`).join('') : `<div class="fairness-empty">${t('reports.fairnessBalanced')}</div>`}
+    </div>
+  `;
 }
 
 async function loadArchive() {
@@ -201,9 +246,12 @@ async function loadBackups() {
 
 async function saveBackups(list) {
   try {
-    await saveState(list.slice(-10), backupKey());
+    const trimmed = list.slice(-MAX_BACKUPS);
+    while (trimmed.length > 1 && JSON.stringify(trimmed).length > MAX_BACKUP_BYTES) trimmed.shift();
+    return await saveState(trimmed, backupKey());
   } catch (e) {
     console.error('Backup save failed', e);
+    return false;
   }
 }
 
@@ -232,8 +280,57 @@ async function createBackup() {
     createdAt
   };
   remaining.push(backup);
-  await saveBackups(remaining);
+  if (!await saveBackups(remaining)) {
+    showToast(t('reports.backupSaveFailed'), 'error');
+    return false;
+  }
   showToast(replacedExisting ? t('reports.backupReplaced') : t('reports.backupCreated'), 'success');
+  return true;
+}
+
+function downloadBackup(item) {
+  if (!item?.snapshot) return;
+  const blob = new Blob([JSON.stringify(item.snapshot, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = backupFileName(item);
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+  showToast(t('reports.backupDownloaded'), 'success');
+}
+
+async function deleteBackup(id) {
+  const list = await loadBackups();
+  const next = list.filter(item => item.id !== id);
+  if (next.length === list.length) return false;
+  return saveBackups(next);
+}
+
+async function deleteAutomaticBackups() {
+  const store = window.miniappsAI?.storage;
+  const unitId = getCurrentUnitId();
+  if (!store || !unitId) return true;
+  const indexKey = `puantaj_auto_backup_index_${unitId}`;
+  try {
+    const raw = await store.getItem(indexKey);
+    const index = raw ? JSON.parse(raw) : [];
+    if (Array.isArray(index)) {
+      for (const item of index) {
+        if (item?.key) await store.removeItem(item.key);
+      }
+    }
+    await store.removeItem(indexKey);
+    return true;
+  } catch (error) {
+    console.error('Automatic backup cleanup failed:', error);
+    return false;
+  }
+}
+
+async function deleteAllBackups() {
+  if (!await saveBackups([])) return false;
+  return deleteAutomaticBackups();
 }
 
 async function renderBackups(container) {
@@ -244,15 +341,32 @@ async function renderBackups(container) {
   }
 
   container.innerHTML = list.slice().reverse().map(item => `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:8px;background:rgba(255,255,255,0.05);margin-bottom:6px">
-      <div>
-        <div style="font-size:13px;color:#fff">${esc(item.label)}</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.4)">${new Date(item.createdAt).toLocaleDateString('tr-TR')}</div>
+    <div class="reports-backup-item">
+      <div class="reports-backup-copy">
+        <strong>${esc(item.label)}</strong>
+        <small>${new Date(item.createdAt).toLocaleString('tr-TR')}</small>
+        <small>${esc(t('reports.backupStoragePath', { path: backupStoragePath() }))}</small>
+        <small>${esc(t('reports.backupFileName', { name: backupFileName(item) }))}</small>
       </div>
-      <button class="action-btn backup-restore" data-id="${item.id}" aria-label="Geri Yükle">↩</button>
+      <div class="reports-backup-actions">
+        <button class="action-btn backup-download" data-id="${esc(item.id)}" aria-label="${esc(t('reports.backupDownload'))}">⇩</button>
+        <button class="action-btn backup-restore" data-id="${esc(item.id)}" aria-label="${esc(t('reports.backupRestore'))}">↩</button>
+        <button class="action-btn action-btn-danger backup-delete" data-id="${esc(item.id)}" aria-label="${esc(t('reports.backupDelete'))}">×</button>
+      </div>
     </div>
   `).join('');
 
+  container.querySelectorAll('.backup-download').forEach(btn => {
+    btn.addEventListener('click', () => downloadBackup(list.find(item => item.id === btn.dataset.id)));
+  });
+  container.querySelectorAll('.backup-delete').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm(t('reports.backupDeleteConfirm'))) return;
+      if (!await deleteBackup(btn.dataset.id)) return showToast(t('reports.backupDeleteFailed'), 'error');
+      await renderBackups(container);
+      showToast(t('reports.backupDeleted'), 'success');
+    });
+  });
   container.querySelectorAll('.backup-restore').forEach(btn => {
     btn.addEventListener('click', async () => {
       if (isPeriodLocked()) return showToast(t('periodLock.lockedMessage'), 'error');
@@ -275,31 +389,35 @@ export async function initReportsPanel(panel) {
   if (!panel) return;
 
   panel.innerHTML = `
-    <div class="glass" style="padding:16px;margin-bottom:16px">
-      <h2 class="section-title" style="margin-bottom:14px">${t('reports.comparisonTitle')}</h2>
+    <div class="reports-shell">
+      <section class="reports-hero">
+        <div><span class="reports-eyebrow">${t('reports.fairnessEyebrow')}</span><h2>${t('reports.fairnessTitle')}</h2><p>${t('reports.fairnessDescription')}</p></div>
+        <span class="reports-period">${esc(getUnitName())} · ${esc(getMonthLabel(getYear(), getMonth()))}</span>
+      </section>
+    </div>
+    <div class="reports-shell">
+      <section class="reports-section">
+        <div class="reports-section-heading"><div><span class="reports-eyebrow">${t('reports.fairnessEyebrow')}</span><h3>${t('reports.fairnessTitle')}</h3></div><span class="reports-section-mark">≈</span></div>
+        <div id="fairnessList"></div>
+      </section>
+    </div>
+    <div class="reports-shell">
+      <section class="reports-section">
+        <div class="reports-section-heading"><div><span class="reports-eyebrow">${t('reports.comparisonEyebrow')}</span><h3>${t('reports.comparisonTitle')}</h3></div><span class="reports-section-mark">▥</span></div>
       <div id="reportsChart"></div>
-    </div>
-    <div class="glass" style="padding:16px;margin-bottom:16px">
-      <h2 class="section-title" style="margin-bottom:12px">${t('reports.fairnessTitle')}</h2>
-      <div id="fairnessList"></div>
-    </div>
-    <div class="glass" style="padding:16px;margin-bottom:16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <h2 class="section-title" style="margin:0">${t('reports.archiveTitle')}</h2>
-        <button class="btn btn-primary" id="archiveCurrentBtn" style="padding:6px 12px;font-size:12px">${t('reports.archiveCurrent')}</button>
-      </div>
-      <div id="archiveList"></div>
-    </div>
-    <div class="glass" style="padding:16px;margin-bottom:16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <h2 class="section-title" style="margin:0">${t('reports.backupTitle')}</h2>
-        <button class="btn btn-primary" id="backupCurrentBtn" style="padding:6px 12px;font-size:12px">${t('reports.backupCurrent')}</button>
-      </div>
-      <div id="backupList"></div>
-    </div>
-    <div class="glass" style="padding:16px">
-      <h2 class="section-title" style="margin-bottom:12px">${t('reports.summaryTitle')}</h2>
-      <div id="reportsSummary"></div>
+      </section>
+      <section class="reports-section">
+        <div class="reports-section-heading"><div><span class="reports-eyebrow">${t('reports.archiveEyebrow')}</span><h3>${t('reports.archiveTitle')}</h3></div><button class="btn btn-primary" id="archiveCurrentBtn" style="padding:6px 12px;font-size:12px">${t('reports.archiveCurrent')}</button></div>
+        <div id="archiveList"></div>
+      </section>
+      <section class="reports-section">
+        <div class="reports-section-heading"><div><span class="reports-eyebrow">${t('reports.backupEyebrow')}</span><h3>${t('reports.backupTitle')}</h3></div><div class="reports-backup-heading-actions"><button class="btn" id="backupDeleteAllBtn" style="padding:6px 12px;font-size:12px">${t('reports.backupDeleteAll')}</button><button class="btn btn-primary" id="backupCurrentBtn" style="padding:6px 12px;font-size:12px">${t('reports.backupCurrent')}</button></div></div>
+        <div id="backupList"></div>
+      </section>
+      <section class="reports-section">
+        <div class="reports-section-heading"><div><span class="reports-eyebrow">${t('reports.summaryEyebrow')}</span><h3>${t('reports.summaryTitle')}</h3></div><span class="reports-section-mark">▤</span></div>
+        <div id="reportsSummary"></div>
+      </section>
     </div>
   `;
 
@@ -316,8 +434,16 @@ export async function initReportsPanel(panel) {
   });
 
   panel.querySelector('#backupCurrentBtn').addEventListener('click', async () => {
-    await createBackup();
+    if (await createBackup()) await renderBackups(panel.querySelector('#backupList'));
+  });
+
+  panel.querySelector('#backupDeleteAllBtn').addEventListener('click', async () => {
+    const list = await loadBackups();
+    if (!list.length) return showToast(t('reports.noBackups'), 'info');
+    if (!confirm(t('reports.backupDeleteAllConfirm'))) return;
+    if (!await deleteAllBackups()) return showToast(t('reports.backupDeleteFailed'), 'error');
     await renderBackups(panel.querySelector('#backupList'));
+    showToast(t('reports.backupsDeleted'), 'success');
   });
 
   const summary = panel.querySelector('#reportsSummary');

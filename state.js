@@ -2,6 +2,7 @@ import { saveState, loadState } from './storage.js';
 import { getDaysInMonth, getYear, getMonth, uid, getWeeks, getShiftMetrics, getNetWorkedHours, roundHours } from './utils.js';
 import { getDutyRecords as listDutyRecords, setDutyRecords, getDutyColumns as listDutyColumns, setDutyColumns as replaceDutyColumns, getDutyForDay, getDutiesForDay, renameDutyPerson, removeDutiesForPerson, removeDutiesForDay, removeOrphanedDuties, addDutyRecord as createDutyRecord, setDutyAssignment as saveDutyCell, removeDutyColumn as removeDutyColumnState, deleteDutyRecord as removeDutyRecord } from './duty-state.js';
 import { addPersonnelToOtherUnits } from './personnel-assignment.js';
+import { formatPersonnelName, personnelNameKey } from './name-format.js';
 
 const DEFAULT_UNITS = [
   { id: 'u_default', name: 'CERRAHİ 1-2' }
@@ -47,6 +48,46 @@ let leaveRequests = [];
 let shiftTemplates = [];
 function sortPersonnel() {
   personnelList.sort((a, b) => a.localeCompare(b, 'tr'));
+}
+
+function remapNameKeys(source, nameMap) {
+  const result = {};
+  Object.entries(source || {}).forEach(([key, value]) => {
+    const nextKey = nameMap.get(key) || formatPersonnelName(key);
+    if (!nextKey) return;
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      result[nextKey] = { ...(result[nextKey] || {}), ...value };
+    } else if (result[nextKey] === undefined) {
+      result[nextKey] = value;
+    }
+  });
+  return result;
+}
+
+function normalizePersonnelNames() {
+  const original = Array.isArray(personnelList) ? personnelList.map(value => String(value || '').trim()).filter(Boolean) : [];
+  const nameMap = new Map(original.map(name => [name, formatPersonnelName(name)]));
+  personnelList = [...new Set(original.map(name => nameMap.get(name)).filter(Boolean))];
+  personnelTypes = remapNameKeys(personnelTypes, nameMap);
+  scheduleData = remapNameKeys(scheduleData, nameMap);
+  weeklyTotals = remapNameKeys(weeklyTotals, nameMap);
+  nightHours = remapNameKeys(nightHours, nameMap);
+  manualTotals = remapNameKeys(manualTotals, nameMap);
+  manualNightHours = remapNameKeys(manualNightHours, nameMap);
+  leaveBalances = remapNameKeys(leaveBalances, nameMap);
+  contactInfo = remapNameKeys(contactInfo, nameMap);
+  certificates = remapNameKeys(certificates, nameMap);
+  performanceNotes = remapNameKeys(performanceNotes, nameMap);
+  swapRequests = (Array.isArray(swapRequests) ? swapRequests : []).map(request => ({
+    ...request,
+    fromPerson: nameMap.get(request.fromPerson) || formatPersonnelName(request.fromPerson),
+    toPerson: nameMap.get(request.toPerson) || formatPersonnelName(request.toPerson)
+  }));
+  leaveRequests = (Array.isArray(leaveRequests) ? leaveRequests : []).map(request => ({
+    ...request,
+    person: nameMap.get(request.person) || formatPersonnelName(request.person)
+  }));
+  return nameMap;
 }
 
 // ─── Birim Yönetimi ───
@@ -110,10 +151,10 @@ export function isAdmin() { return role === 'admin'; }
 // ─── Personel ───
 
 export function getPersonnelList() { return [...personnelList]; }
-export function getPersonnelType(name) { return personnelTypes[name] || 'worker'; }
+export function getPersonnelType(name) { return personnelTypes[personnelNameKey(name)] || 'worker'; }
 
 export function addPersonnel(name, type = 'worker') {
-  const n = (name || '').trim().toUpperCase();
+  const n = formatPersonnelName(name);
   if (!n || personnelList.includes(n)) return false;
   personnelList.push(n);
   personnelTypes[n] = type;
@@ -130,7 +171,7 @@ export function addPersonnel(name, type = 'worker') {
 }
 
 export async function addPersonnelToUnits(name, type = 'worker', unitIds = []) {
-  const normalized = (name || '').trim().toUpperCase();
+  const normalized = formatPersonnelName(name);
   const selected = [...new Set(unitIds.map(String))].filter(Boolean);
   if (!normalized || !selected.length) return false;
   const currentSelected = selected.includes(String(currentUnitId));
@@ -140,55 +181,63 @@ export async function addPersonnelToUnits(name, type = 'worker', unitIds = []) {
 }
 
 export function editPersonnel(oldName, newName, newType) {
-  const newN = (newName || '').trim().toUpperCase();
+  const oldN = personnelNameKey(oldName);
+  const newN = formatPersonnelName(newName);
   if (!newN) return false;
-  if (newN !== oldName && personnelList.includes(newN)) return false;
-  const idx = personnelList.indexOf(oldName);
+  if (newN !== oldN && personnelList.includes(newN)) return false;
+  const idx = personnelList.indexOf(oldN);
   if (idx === -1) return false;
 
-  if (newN !== oldName) {
+  if (newN !== oldN) {
     personnelList[idx] = newN;
-    scheduleData[newN] = scheduleData[oldName];
-    delete scheduleData[oldName];
-    personnelTypes[newN] = newType || personnelTypes[oldName] || 'worker';
-    delete personnelTypes[oldName];
-    if (nightHours[oldName]) { nightHours[newN] = nightHours[oldName]; delete nightHours[oldName]; }
-    if (weeklyTotals[oldName]) { weeklyTotals[newN] = weeklyTotals[oldName]; delete weeklyTotals[oldName]; }
-    if (manualTotals[oldName]) { manualTotals[newN] = manualTotals[oldName]; delete manualTotals[oldName]; }
-    if (manualNightHours[oldName]) { manualNightHours[newN] = manualNightHours[oldName]; delete manualNightHours[oldName]; }
-    if (leaveBalances[oldName]) { leaveBalances[newN] = leaveBalances[oldName]; delete leaveBalances[oldName]; }
-    if (contactInfo[oldName]) { contactInfo[newN] = contactInfo[oldName]; delete contactInfo[oldName]; }
-    renameDutyPerson(oldName, newN);
+    scheduleData[newN] = scheduleData[oldN];
+    delete scheduleData[oldN];
+    personnelTypes[newN] = newType || personnelTypes[oldN] || 'worker';
+    delete personnelTypes[oldN];
+    if (nightHours[oldN]) { nightHours[newN] = nightHours[oldN]; delete nightHours[oldN]; }
+    if (weeklyTotals[oldN]) { weeklyTotals[newN] = weeklyTotals[oldN]; delete weeklyTotals[oldN]; }
+    if (manualTotals[oldN]) { manualTotals[newN] = manualTotals[oldN]; delete manualTotals[oldN]; }
+    if (manualNightHours[oldN]) { manualNightHours[newN] = manualNightHours[oldN]; delete manualNightHours[oldN]; }
+    if (leaveBalances[oldN]) { leaveBalances[newN] = leaveBalances[oldN]; delete leaveBalances[oldN]; }
+    if (contactInfo[oldN]) { contactInfo[newN] = contactInfo[oldN]; delete contactInfo[oldN]; }
+    if (certificates[oldN]) { certificates[newN] = certificates[oldN]; delete certificates[oldN]; }
+    if (performanceNotes[oldN]) { performanceNotes[newN] = performanceNotes[oldN]; delete performanceNotes[oldN]; }
+    swapRequests = swapRequests.map(request => ({ ...request, fromPerson: request.fromPerson === oldN ? newN : request.fromPerson, toPerson: request.toPerson === oldN ? newN : request.toPerson }));
+    leaveRequests = leaveRequests.map(request => ({ ...request, person: request.person === oldN ? newN : request.person }));
+    renameDutyPerson(oldN, newN);
     sortPersonnel();
   } else if (newType) {
-    personnelTypes[oldName] = newType;
+    personnelTypes[oldN] = newType;
   }
   save();
   return true;
 }
 
 export function deletePersonnel(name) {
-  const idx = personnelList.indexOf(name);
+  const person = personnelNameKey(name);
+  const idx = personnelList.indexOf(person);
   if (idx === -1) return false;
   personnelList.splice(idx, 1);
-  delete scheduleData[name];
-  delete personnelTypes[name];
-  delete nightHours[name];
-  delete weeklyTotals[name];
-  delete manualTotals[name];
-  delete manualNightHours[name];
-  delete leaveBalances[name];
-  delete contactInfo[name];
-  delete certificates[name];
-  delete performanceNotes[name];
-  removeDutiesForPerson(name);
+  delete scheduleData[person];
+  delete personnelTypes[person];
+  delete nightHours[person];
+  delete weeklyTotals[person];
+  delete manualTotals[person];
+  delete manualNightHours[person];
+  delete leaveBalances[person];
+  delete contactInfo[person];
+  delete certificates[person];
+  delete performanceNotes[person];
+  swapRequests = swapRequests.filter(request => request.fromPerson !== person && request.toPerson !== person);
+  leaveRequests = leaveRequests.filter(request => request.person !== person);
+  removeDutiesForPerson(person);
   save();
   savePersonnelMeta();
   return true;
 }
 
 export function personExists(name) {
-  return personnelList.includes((name || '').trim().toUpperCase());
+  return personnelList.includes(personnelNameKey(name));
 }
 
 // ─── Vardiya & Toplamlar ───
@@ -198,10 +247,11 @@ export function getCurrentWeek() { return currentWeek; }
 export function setCurrentWeek(week) { currentWeek = week; }
 
 export function updateShift(name, day, value) {
-  if (!scheduleData[name]) return;
-  removeDutiesForDay(name, day);
-  scheduleData[name][String(day)] = (value || '').toUpperCase().trim();
-  clearManualOverrides(name, day);
+  const person = personnelNameKey(name);
+  if (!scheduleData[person]) return;
+  removeDutiesForDay(person, day);
+  scheduleData[person][String(day)] = (value || '').toUpperCase().trim();
+  clearManualOverrides(person, day);
   recalculateTotals();
   save();
 }
@@ -297,53 +347,58 @@ export function recalculateTotals() {
 }
 
 export function getNightHours(name, weekIndex) {
-  return (nightHours[name] && nightHours[name][weekIndex]) || 0;
+  const person = personnelNameKey(name);
+  return (nightHours[person] && nightHours[person][weekIndex]) || 0;
 }
 
 export function setNightHours(name, weekIndex, hours) {
-  if (!nightHours[name]) nightHours[name] = {};
-  if (!manualNightHours[name]) manualNightHours[name] = {};
+  const person = personnelNameKey(name);
+  if (!personnelList.includes(person)) return;
+  if (!nightHours[person]) nightHours[person] = {};
+  if (!manualNightHours[person]) manualNightHours[person] = {};
   if (String(hours).trim() === '') {
-    delete manualNightHours[name][weekIndex];
+    delete manualNightHours[person][weekIndex];
     recalculateTotals();
   } else {
     const value = Math.max(0, parseInt(hours) || 0);
-    manualNightHours[name][weekIndex] = value;
-    nightHours[name][weekIndex] = value;
+    manualNightHours[person][weekIndex] = value;
+    nightHours[person][weekIndex] = value;
   }
   save();
 }
 
 export function getTotalNightHours(name) {
-  const h = nightHours[name];
+  const h = nightHours[personnelNameKey(name)];
   if (!h) return 0;
   return Object.values(h).reduce((sum, v) => sum + v, 0);
 }
 
 export function getWeeklyTotal(name, weekIndex, field) {
-  const w = weeklyTotals[name];
+  const w = weeklyTotals[personnelNameKey(name)];
   if (!w || !w[weekIndex]) return 0;
   return w[weekIndex][field] || 0;
 }
 
 export function setWeeklyTotal(name, weekIndex, field, value) {
-  if (!weeklyTotals[name]) weeklyTotals[name] = {};
-  if (!weeklyTotals[name][weekIndex]) weeklyTotals[name][weekIndex] = { worked: 0, extra: 0, holiday: 0 };
-  if (!manualTotals[name]) manualTotals[name] = {};
-  if (!manualTotals[name][weekIndex]) manualTotals[name][weekIndex] = {};
+  const person = personnelNameKey(name);
+  if (!personnelList.includes(person)) return;
+  if (!weeklyTotals[person]) weeklyTotals[person] = {};
+  if (!weeklyTotals[person][weekIndex]) weeklyTotals[person][weekIndex] = { worked: 0, extra: 0, holiday: 0 };
+  if (!manualTotals[person]) manualTotals[person] = {};
+  if (!manualTotals[person][weekIndex]) manualTotals[person][weekIndex] = {};
   if (String(value).trim() === '') {
-    delete manualTotals[name][weekIndex][field];
+    delete manualTotals[person][weekIndex][field];
     recalculateTotals();
   } else {
     const numericValue = Math.max(0, Number.parseFloat(String(value).replace(',', '.')) || 0);
-    manualTotals[name][weekIndex][field] = numericValue;
-    weeklyTotals[name][weekIndex][field] = numericValue;
+    manualTotals[person][weekIndex][field] = numericValue;
+    weeklyTotals[person][weekIndex][field] = numericValue;
   }
   save();
 }
 
 export function getMonthlyTotal(name, field) {
-  const w = weeklyTotals[name];
+  const w = weeklyTotals[personnelNameKey(name)];
   if (!w) return 0;
   return Object.values(w).reduce((sum, week) => sum + (week[field] || 0), 0);
 }
@@ -363,12 +418,13 @@ export function updateAdmin(key, value) {
 // ─── İletişim Bilgileri ───
 
 export function getContactInfo(name) {
-  return contactInfo[name] || { phone: '', email: '', emergency: '', address: '' };
+  return contactInfo[personnelNameKey(name)] || { phone: '', email: '', emergency: '', address: '' };
 }
 
 export function setContactInfo(name, info) {
-  if (!personnelList.includes(name)) return false;
-  contactInfo[name] = {
+  const person = personnelNameKey(name);
+  if (!personnelList.includes(person)) return false;
+  contactInfo[person] = {
     phone: (info.phone || '').trim(),
     email: (info.email || '').trim(),
     emergency: (info.emergency || '').trim(),
@@ -381,12 +437,13 @@ export function setContactInfo(name, info) {
 // ─── İzin Takibi ───
 
 export function getLeaveBalances(name) {
-  return leaveBalances[name] || { annual: 0, sick: 0, unpaid: 0 };
+  return leaveBalances[personnelNameKey(name)] || { annual: 0, sick: 0, unpaid: 0 };
 }
 
 export function setLeaveBalances(name, balances) {
-  if (!personnelList.includes(name)) return false;
-  leaveBalances[name] = {
+  const person = personnelNameKey(name);
+  if (!personnelList.includes(person)) return false;
+  leaveBalances[person] = {
     annual: Math.max(0, parseInt(balances.annual) || 0),
     sick: Math.max(0, parseInt(balances.sick) || 0),
     unpaid: Math.max(0, parseInt(balances.unpaid) || 0)
@@ -397,12 +454,13 @@ export function setLeaveBalances(name, balances) {
 
 // ─── İK ve Operasyon Araçları ───
 
-export function getCertificates(name) { return [...(certificates[name] || [])]; }
+export function getCertificates(name) { return [...(certificates[personnelNameKey(name)] || [])]; }
 
 export function addCertificate(name, certificate) {
-  if (!personnelList.includes(name) || !certificate?.title) return false;
-  if (!certificates[name]) certificates[name] = [];
-  certificates[name].push({
+  const person = personnelNameKey(name);
+  if (!personnelList.includes(person) || !certificate?.title) return false;
+  if (!certificates[person]) certificates[person] = [];
+  certificates[person].push({
     id: uid('cert'),
     title: String(certificate.title).trim(),
     expiry: certificate.expiry || '',
@@ -413,16 +471,18 @@ export function addCertificate(name, certificate) {
 }
 
 export function deleteCertificate(name, id) {
-  if (!certificates[name]) return false;
-  certificates[name] = certificates[name].filter(item => item.id !== id);
+  const person = personnelNameKey(name);
+  if (!certificates[person]) return false;
+  certificates[person] = certificates[person].filter(item => item.id !== id);
   savePersonnelMeta();
   return true;
 }
 
-export function getPerformanceNote(name) { return performanceNotes[name] || ''; }
+export function getPerformanceNote(name) { return performanceNotes[personnelNameKey(name)] || ''; }
 export function setPerformanceNote(name, note) {
-  if (!personnelList.includes(name)) return false;
-  performanceNotes[name] = String(note || '').trim();
+  const person = personnelNameKey(name);
+  if (!personnelList.includes(person)) return false;
+  performanceNotes[person] = String(note || '').trim();
   savePersonnelMeta();
   return true;
 }
@@ -438,10 +498,11 @@ export function setApprovalStep(step, status) {
 
 export function getLeaveRequests() { return [...leaveRequests]; }
 export function addLeaveRequest(request) {
-  if (!request?.person || !personnelList.includes(request.person)) return null;
+  const person = personnelNameKey(request?.person);
+  if (!person || !personnelList.includes(person)) return null;
   const item = {
     id: uid('leave'),
-    person: request.person,
+    person,
     type: request.type || 'annual',
     start: request.start || '',
     end: request.end || '',
@@ -485,12 +546,14 @@ export function setDutyColumns(nextColumns) {
   save();
 }
 export function addDutyRecord(record) {
-  clearManualOverrides(record?.person, record?.day);
-  return createDutyRecord(record, personnelList, scheduleData, recalculateTotals, save);
+  const normalized = { ...record, person: personnelNameKey(record?.person) };
+  clearManualOverrides(normalized.person, normalized.day);
+  return createDutyRecord(normalized, personnelList, scheduleData, recalculateTotals, save);
 }
 export function setDutyAssignment(assignment) {
-  if (assignment?.person) clearManualOverrides(assignment.person, assignment.day);
-  return saveDutyCell(assignment, personnelList, scheduleData, recalculateTotals, save);
+  const normalized = { ...assignment, person: assignment?.person ? personnelNameKey(assignment.person) : '' };
+  if (normalized.person) clearManualOverrides(normalized.person, normalized.day);
+  return saveDutyCell(normalized, personnelList, scheduleData, recalculateTotals, save);
 }
 export function removeDutyColumn(columnKey) {
   return removeDutyColumnState(columnKey, scheduleData, recalculateTotals, save);
@@ -544,8 +607,12 @@ export function importStateSnapshot(snapshot) {
   approvalState = { headNurse: 'pending', manager: 'pending', chiefDoctor: 'pending', ...(snapshot.approvalState || {}) };
   leaveRequests = snapshot.leaveRequests || [];
   shiftTemplates = snapshot.shiftTemplates || [];
+  const nameMap = normalizePersonnelNames();
   replaceDutyColumns(snapshot.dutyColumns || []);
-  setDutyRecords(snapshot.dutyRecords || []);
+  setDutyRecords((snapshot.dutyRecords || []).map(record => ({
+    ...record,
+    person: nameMap.get(record?.person) || formatPersonnelName(record?.person)
+  })));
   recalculateTotals();
   sortPersonnel();
   ensureAllPersonnelMeta();
@@ -564,9 +631,9 @@ export function addSwapRequest(request) {
   const id = uid('swap');
   swapRequests.push({
     id,
-    fromPerson: request.fromPerson,
+    fromPerson: personnelNameKey(request.fromPerson),
     fromDay: request.fromDay,
-    toPerson: request.toPerson,
+    toPerson: personnelNameKey(request.toPerson),
     toDay: request.toDay,
     status: 'pending',
     createdAt: new Date().toISOString()
@@ -679,8 +746,12 @@ export async function init() {
     approvalState = { headNurse: 'pending', manager: 'pending', chiefDoctor: 'pending', ...(saved.approvalState || {}) };
     leaveRequests = saved.leaveRequests || [];
     shiftTemplates = saved.shiftTemplates || [];
+    const nameMap = normalizePersonnelNames();
     replaceDutyColumns(saved.dutyColumns || []);
-    setDutyRecords(saved.dutyRecords || []);
+    setDutyRecords((saved.dutyRecords || []).map(record => ({
+      ...record,
+      person: nameMap.get(record?.person) || formatPersonnelName(record?.person)
+    })));
     removeOrphanedDuties(scheduleData).forEach(item => clearManualOverrides(item.person, item.day));
     admins = saved.admins ? { ...DEFAULT_ADMINS, ...saved.admins } : { ...DEFAULT_ADMINS };
     sortPersonnel();
@@ -696,13 +767,14 @@ export async function init() {
     });
     personnelList.forEach(name => getWeeks().forEach((_, index) => clearEmptyWeekOverrides(name, index)));
     await loadPersonnelMeta();
+    normalizePersonnelNames();
     ensureAllPersonnelMeta();
     recalculateTotals();
     save();
   } else {
-    personnelList = DEFAULT_PERSONNEL.map(p => p.name);
+    personnelList = DEFAULT_PERSONNEL.map(p => formatPersonnelName(p.name));
     personnelTypes = {};
-    DEFAULT_PERSONNEL.forEach(p => { personnelTypes[p.name] = p.type; });
+    DEFAULT_PERSONNEL.forEach(p => { personnelTypes[formatPersonnelName(p.name)] = p.type; });
     scheduleData = {};
     weeklyTotals = {};
     nightHours = {};

@@ -1,0 +1,87 @@
+/* Reference-style period menu: light, compact and easy to scan. */
+.period-selector {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.period-selector-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 58px;
+  white-space: nowrap;
+}
+.period-selector-kicker {
+  color: rgba(226,232,240,.48);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.period-selector-current {
+  color: #e7f6ff;
+  font-size: 12px;
+  font-weight: 650;
+}
+.period-selector-menu {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.period-choice {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 36px;
+  padding: 3px 7px 3px 9px;
+  border: 1px solid rgba(80,230,255,.18);
+  border-radius: 8px;
+  background: rgba(7,31,57,.52);
+  color: rgba(226,232,240,.48);
+  font-size: 10px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.period-choice select {
+  min-width: 0;
+  width: auto;
+  min-height: 28px;
+  padding: 4px 20px 4px 5px !important;
+  border: 0 !important;
+  border-radius: 5px;
+  background-color: transparent !important;
+  color: #e7f3ff !important;
+  font-size: 12px !important;
+  font-weight: 650;
+}
+.period-choice select:focus-visible {
+  outline: 2px solid rgba(80,230,255,.72);
+  outline-offset: 0;
+}
+.period-current-btn {
+  min-height: 36px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: rgba(56,189,248,.12);
+  border-color: rgba(56,189,248,.38);
+  color: #9bdfff;
+  font-size: 11px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.period-current-btn:hover:not(:disabled) {
+  background: rgba(56,189,248,.22);
+  border-color: rgba(80,230,255,.68);
+}
+.period-current-btn:disabled { opacity: .42; }
+
+@media (max-width: 700px) {
+  .period-selector { width: 100%; align-items: flex-start; gap: 8px; }
+  .period-selector-heading { min-width: 54px; padding-top: 4px; }
+  .period-selector-menu { flex: 1; flex-wrap: wrap; }
+  .period-choice { flex: 1 1 100px; }
+  .period-current-btn { flex: 0 0 auto; }
+}

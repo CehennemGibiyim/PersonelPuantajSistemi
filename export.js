@@ -1,7 +1,8 @@
 import { getPersonnelList, getScheduleData, getDutyRecords, getDutyColumns, getAdmins, getPersonnelType, getTotalNightHours, getNightHours, getUnitName, getMonthlyTotal, getWeeklyTotal } from './state.js';
 import { getYear, getMonth, MONTHS_TR, getWeeks, getDayName, getFullDayName, isWeekend, isHoliday, isSaturday, t, getDaysInMonth } from './utils.js';
 import { showToast } from './ui/toast-view.js';
-import { punchLabelForDuty, effectiveColumns, recordMatchesColumn, formatColumn } from './ui/duty-roster-utils.js?v=5';
+import { punchLabelForDuty, effectiveColumns, recordMatchesColumn, formatColumn } from './ui/duty-roster-utils.js?v=6';
+import { getAvailabilityStatus } from './availability-state.js';
 
 let excelPromise = null;
 
@@ -87,8 +88,9 @@ function codeFill(value) {
   return colors.cyanSoft;
 }
 
-function monthlyRequired(type, days) {
-  const eligible = days.filter(d => !isWeekend(d) && !isHoliday(d)).length;
+function monthlyRequired(type, days, name) {
+  const eligible = days.filter(d => !isWeekend(d) && !isHoliday(d)
+    && !['annual', 'sick', 'unpaid'].includes(getAvailabilityStatus(name, d))).length;
   return Math.round(eligible * ((type === 'civil' ? 40 : 45) / 6));
 }
 
@@ -126,7 +128,7 @@ function addPunchSheet(workbook) {
         const duty = duties.find(item => item.person === name && Number(item.day) === Number(day));
         values.push(duty ? punchLabelForDuty(duty, true) : (schedule[name]?.[day] || ''));
       });
-      values.push(monthlyRequired(type, week.days), getWeeklyTotal(name, weekIndex, 'worked'), getNightHours(name, weekIndex), getWeeklyTotal(name, weekIndex, 'extra'), getWeeklyTotal(name, weekIndex, 'holiday'));
+      values.push(monthlyRequired(type, week.days, name), getWeeklyTotal(name, weekIndex, 'worked'), getNightHours(name, weekIndex), getWeeklyTotal(name, weekIndex, 'extra'), getWeeklyTotal(name, weekIndex, 'holiday'));
       const body = ws.getRow(row++);
       body.values = values;
       styleBody(body, true);
@@ -146,7 +148,7 @@ function addPunchSheet(workbook) {
   const allDays = Array.from({ length: getDaysInMonth() }, (_, i) => i + 1);
   personnel.forEach(name => {
     const type = getPersonnelType(name) || 'worker';
-    const required = monthlyRequired(type, allDays);
+    const required = monthlyRequired(type, allDays, name);
     const worked = getMonthlyTotal(name, 'worked');
     const diff = worked - required;
     const body = ws.getRow(row++);
@@ -209,22 +211,37 @@ function downloadBlob(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export async function exportToExcel() {
+async function exportWorkbook(kind = 'punch') {
   try {
     const ExcelJS = await loadExcelJS();
     if (!ExcelJS) throw new Error('Excel kütüphanesi yüklenemedi');
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'Personel Nöbet + Puantaj Sistemi';
     workbook.created = new Date();
-    addPunchSheet(workbook);
-    addDutySheet(workbook);
+    const isDuty = kind === 'duty';
+    if (isDuty) addDutySheet(workbook);
+    else addPunchSheet(workbook);
     const buffer = await workbook.xlsx.writeBuffer();
-    downloadBlob(new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `Puantaj_Nobet_${MONTHS_TR[getMonth()]}_${getYear()}.xlsx`);
-    showToast(t('app.toastExportSuccess'), 'success');
+    const filename = isDuty ? `Nobet_Listesi_${MONTHS_TR[getMonth()]}_${getYear()}.xlsx` : `Puantaj_${MONTHS_TR[getMonth()]}_${getYear()}.xlsx`;
+    downloadBlob(new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), filename);
+    showToast(t(isDuty ? 'dutySystem.toastExcelSuccess' : 'app.toastExportSuccess'), 'success');
   } catch (error) {
     console.error('Excel export failed:', error);
-    showToast(t('app.toastExportError'), 'error');
+    showToast(t(kind === 'duty' ? 'dutySystem.toastExcelError' : 'app.toastExportError'), 'error');
   }
+}
+
+export async function exportPunchToExcel() {
+  return exportWorkbook('punch');
+}
+
+export async function exportDutyToExcel() {
+  return exportWorkbook('duty');
+}
+
+// Backward-compatible alias for existing advanced-panel integrations.
+export async function exportToExcel() {
+  return exportPunchToExcel();
 }
 
 function csvCell(value) {
@@ -232,17 +249,39 @@ function csvCell(value) {
   return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
-export function exportToCsv() {
+function buildPunchCsv() {
   const personnel = getPersonnelList();
   const schedule = getScheduleData();
   const duties = getDutyRecords();
-  const rows = [[`${getUnitName()} — ${MONTHS_TR[getMonth()]} ${getYear()}`], [t('app.nameCol'), ...Array.from({ length: getDaysInMonth() }, (_, i) => `${i + 1} ${getDayName(i + 1)}`), t('app.monthlyWorked'), t('app.monthlyNightOvertime'), t('app.monthlyOvertime'), t('app.monthlyHoliday')]];
+  const rows = [[`${getUnitName()} — ${MONTHS_TR[getMonth()]} ${getYear()} — PUANTAJ`], [t('app.nameCol'), ...Array.from({ length: getDaysInMonth() }, (_, i) => `${i + 1} ${getDayName(i + 1)}`), t('app.monthlyWorked'), t('app.monthlyNightOvertime'), t('app.monthlyOvertime'), t('app.monthlyHoliday')]];
   personnel.forEach(name => rows.push([name, ...Array.from({ length: getDaysInMonth() }, (_, i) => { const day = i + 1; const duty = duties.find(item => item.person === name && Number(item.day) === day); return duty ? punchLabelForDuty(duty, true) : (schedule[name]?.[day] || ''); }), getMonthlyTotal(name, 'worked'), getTotalNightHours(name), getMonthlyTotal(name, 'extra'), getMonthlyTotal(name, 'holiday')]));
-  rows.push([], ['NÖBET LİSTESİ'], [t('dutySystem.printDate'), t('dutySystem.printDay'), ...effectiveColumns(getDutyColumns(), duties).map(formatColumn)]);
-  for (let day = 1; day <= getDaysInMonth(); day += 1) rows.push([day, getFullDayName(day), ...effectiveColumns(getDutyColumns(), duties).map(column => duties.find(item => Number(item.day) === day && recordMatchesColumn(item, column))?.person || '')]);
+  return rows;
+}
+
+function buildDutyCsv() {
+  const duties = getDutyRecords();
+  const columns = effectiveColumns(getDutyColumns(), duties);
+  const rows = [[`${getUnitName()} — ${MONTHS_TR[getMonth()]} ${getYear()} — NÖBET LİSTESİ`], [t('dutySystem.printDate'), t('dutySystem.printDay'), ...columns.map(formatColumn)]];
+  for (let day = 1; day <= getDaysInMonth(); day += 1) rows.push([day, getFullDayName(day), ...columns.map(column => duties.find(item => Number(item.day) === day && recordMatchesColumn(item, column))?.person || '')]);
+  return rows;
+}
+
+function downloadCsv(rows, filename, toastKey) {
   const csv = '\uFEFF' + rows.map(row => row.map(csvCell).join(';')).join('\n');
-  downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), `Puantaj_Nobet_${MONTHS_TR[getMonth()]}_${getYear()}.csv`);
-  showToast(t('app.toastCsvSuccess'), 'success');
+  downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), filename);
+  showToast(t(toastKey), 'success');
+}
+
+export function exportPunchToCsv() {
+  downloadCsv(buildPunchCsv(), `Puantaj_${MONTHS_TR[getMonth()]}_${getYear()}.csv`, 'app.toastCsvSuccess');
+}
+
+export function exportDutyToCsv() {
+  downloadCsv(buildDutyCsv(), `Nobet_Listesi_${MONTHS_TR[getMonth()]}_${getYear()}.csv`, 'dutySystem.toastCsvSuccess');
+}
+
+export function exportToCsv() {
+  return exportPunchToCsv();
 }
 
 export async function exportPayroll() {

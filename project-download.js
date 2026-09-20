@@ -1,5 +1,7 @@
 const PROJECT_FILES = [
   'index.html',
+  'boot-diagnostics.js',
+  'boot-entry.js',
   'styles.css',
   'duty-system.css',
   'directory.css',
@@ -7,6 +9,11 @@ const PROJECT_FILES = [
   'onboarding.css',
   'polish.css',
   'dashboard.css',
+  'reports.css',
+  'period-selector.css',
+  'navigation.css',
+  'templates-workspace.css',
+  'desktop-window.css',
   'data-guard.js',
   'package.json',
   'electron-main.cjs',
@@ -26,6 +33,10 @@ const PROJECT_FILES = [
   'admin-state.js',
   'duty-state.js',
   'personnel-assignment.js',
+  'personnel-network.js',
+  'personnel-photo-state.js',
+  'personnel-photo-service.js',
+  'name-format.js',
   'storage.js',
   'utils.js',
   'export.js',
@@ -57,6 +68,9 @@ const PROJECT_FILES = [
   'ui/monthly-table-view.js',
   'ui/monthly-note-view.js',
   'ui/personnel-directory-view.js',
+  'ui/personnel-attendance-view.js',
+  'ui/personnel-departments-view.js',
+  'ui/photo-crop-view.js',
   'ui/directory-print-view.js',
   'ui/personnel-detail-modal-view.js',
   'ui/personnel-import-view.js',
@@ -67,12 +81,31 @@ const PROJECT_FILES = [
   'ui/swap-request-view.js',
   'ui/tabs-view.js',
   'ui/toast-view.js',
+  'ui/templates-workspace-view.js',
   'ui/unit-modal-view.js',
   'ui/warnings-panel-view.js',
   'ui/availability-calendar-view.js',
   'ui/week-table-view.js',
   'project-download.js'
 ];
+
+const EXPECTED_SOURCE_FILE_COUNT = 88;
+
+function assertProjectFileList() {
+  const uniqueFiles = new Set(PROJECT_FILES);
+  if (PROJECT_FILES.length !== EXPECTED_SOURCE_FILE_COUNT) {
+    throw new Error(`Proje dosya listesi eksik veya fazla: ${PROJECT_FILES.length}/${EXPECTED_SOURCE_FILE_COUNT}`);
+  }
+  if (uniqueFiles.size !== PROJECT_FILES.length) {
+    throw new Error('Proje dosya listesinde tekrar eden dosya var. ZIP oluşturulmadı.');
+  }
+  const required = [
+    'index.html', 'main.js', 'project-download.js', 'ui/templates-workspace-view.js',
+    'electron-main.cjs', 'electron-preload.cjs', 'package.json', 'locales/tr.json', 'locales/en.json'
+  ];
+  const missing = required.filter(path => !uniqueFiles.has(path));
+  if (missing.length) throw new Error(`Proje listesinde zorunlu dosya eksik: ${missing.join(', ')}`);
+}
 
 const textEncoder = new TextEncoder();
 
@@ -151,66 +184,34 @@ function zipStore(files) {
   return concat([localData, centralData, endRecord]);
 }
 
-// The preview server can return 403 for index.html.  Using outerHTML as the
-// first choice would capture the already-rendered application, including
-// translated/dynamic labels and the current screen state, instead of the
-// original source shell. Keep a clean source fallback for that case.
-function fallbackIndexSource() {
-  return `<!DOCTYPE html>
-<html lang="tr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
-  <title>Personel Nöbet + Puantaj Sistemi</title>
-  <link rel="stylesheet" href="styles.css?v=24">
-  <link rel="stylesheet" href="duty-system.css?v=22">
-  <link rel="stylesheet" href="directory.css?v=5">
-  <link rel="stylesheet" href="availability.css?v=2">
-  <link rel="stylesheet" href="onboarding.css?v=1">
-  <link rel="stylesheet" href="polish.css?v=6">
-  <link rel="stylesheet" href="dashboard.css?v=3">
-</head>
-<body>
-  <div class="app" id="screenView">
-    <div class="app-layout">
-      <aside class="sidebar" id="sidebar" aria-label="Sol menü"></aside>
-      <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
-      <main class="app-content">
-        <div class="glass period-bar">
-          <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Menüyü aç">☰</button>
-          <div class="period-control"><span id="unitIcon" aria-hidden="true"></span><div id="unitSelector"></div></div>
-          <div class="divider-v"></div>
-          <div class="period-control"><span id="calendarIcon" aria-hidden="true"></span><div id="monthSelector"></div></div>
-          <div class="period-spacer"></div>
-          <button class="btn" id="roleBtn" data-i18n="app.roleBtn">Rol</button>
-        </div>
-        <span id="appSubtitle" hidden aria-hidden="true"></span>
-        <div id="headerActions" hidden aria-hidden="true"></div>
-        <div id="viewToolbar" class="view-toolbar" data-i18n-aria-label="app.viewActions"></div>
-        <div id="onboardingView" aria-live="polite"></div>
-        <div id="dashboardView" aria-live="polite"></div>
-        <div id="workspaceView">
-          <div class="tabs" id="weekTabs" role="tablist"></div>
-          <div class="glass legend-panel"><div class="legend" id="legendContainer"></div><p class="legend-help" data-i18n="app.shiftCodes"></p></div>
-          <div class="section-title" id="weekLabel">1. HAFTA</div>
-          <div class="glass table-wrap" id="tableContainer"></div>
-          <div class="section-title" id="monthlyLabel" style="margin-top:16px" data-i18n="app.monthlySummary">AYLIK ÖZET</div>
-          <div class="glass table-wrap"><div id="monthlyContainer"></div></div>
-          <div id="reportsPanel" style="display:none"></div>
-          <div id="bottomActions" class="legacy-actions" aria-hidden="true"></div>
-          <div id="footerBar" class="footer-bar"></div>
-        </div>
-        <div id="dutySystemView" style="display:none"></div>
-      </main>
-    </div>
-  </div>
-  <div id="printView" class="print-view"></div>
-  <script type="module" src="main.js?v=44"></script>
-</body>
-</html>`;
+function currentIndexSource() {
+  const root = document.documentElement.cloneNode(true);
+  root.classList.remove('app-ready');
+  [
+    '#sidebar', '#viewToolbar', '#onboardingView', '#dashboardView',
+    '#unitSelector', '#monthSelector', '#appSubtitle', '#headerActions',
+    '#weekTabs', '#legendContainer', '#tableContainer', '#monthlyContainer',
+    '#reportsPanel', '#bottomActions', '#footerBar', '#templatesWorkspaceView',
+    '#dutySystemView', '#printView'
+  ].forEach(selector => {
+    const element = root.querySelector(selector);
+    if (element) element.replaceChildren();
+  });
+  const bootScreen = root.querySelector('#bootScreen');
+  if (bootScreen) bootScreen.hidden = false;
+  const bootError = root.querySelector('#bootError');
+  if (bootError) {
+    bootError.hidden = true;
+    bootError.textContent = '';
+  }
+  const moduleScript = root.querySelector('script[type="module"][src*="main.js"]');
+  if (!moduleScript) {
+    const script = document.createElement('script');
+    script.type = 'module';
+    script.src = 'main.js';
+    root.querySelector('body')?.appendChild(script);
+  }
+  return `<!DOCTYPE html>\n${root.outerHTML}`;
 }
 
 function isUsableSource(path, text) {
@@ -225,18 +226,6 @@ function isUsableSource(path, text) {
     try { JSON.parse(value); } catch { return false; }
   }
   return true;
-}
-
-async function readFromCache(url, path) {
-  if (!('caches' in window)) return null;
-  try {
-    const response = await caches.match(url);
-    if (!response?.ok) return null;
-    const text = await response.text();
-    return isUsableSource(path, text) ? text : null;
-  } catch {
-    return null;
-  }
 }
 
 function readViaSourceFrame(url, path) {
@@ -273,7 +262,10 @@ function readViaSourceFrame(url, path) {
 async function readProjectFile(path) {
   if (window.desktopAPI?.readFile) {
     const desktopSource = window.desktopAPI.readFile(path);
-    if (desktopSource != null) return { name: `puantaj-projesi/${path}`, text: desktopSource };
+    const usableDesktopSource = path === 'index.html'
+      ? /<html[\s>]/i.test(String(desktopSource || '')) && /main\.js(?:\?[^"']*)?["']/i.test(String(desktopSource || ''))
+      : isUsableSource(path, desktopSource);
+    if (usableDesktopSource) return { name: `puantaj-projesi/${path}`, text: desktopSource };
   }
 
   // In preview, never use the rendered document or a transformed HTML
@@ -281,14 +273,14 @@ async function readProjectFile(path) {
   // changes, which can turn visible labels into raw keys such as "app.title".
   // Keep the downloaded source shell stable and source-oriented.
   if (path === 'index.html') {
-    return { name: `puantaj-projesi/${path}`, text: fallbackIndexSource() };
+    return { name: `puantaj-projesi/${path}`, text: currentIndexSource() };
   }
 
   const url = new URL(path, import.meta.url).href;
-  const cached = await readFromCache(url, path);
-  if (cached) return { name: `puantaj-projesi/${path}`, text: cached };
-
-  const candidates = [url, `${url}${url.includes('?') ? '&' : '?'}source=download`];
+  // Prefer the current workspace response. A previously cached module can be
+  // valid JavaScript while still being an older version of the project.
+  const downloadUrl = `${url}${url.includes('?') ? '&' : '?'}download=${Date.now()}`;
+  const candidates = [downloadUrl, `${url}${url.includes('?') ? '&' : '?'}source=download`];
   for (const candidate of candidates) {
     try {
       const response = await fetch(candidate, { cache: 'no-store', credentials: 'include' });
@@ -304,32 +296,112 @@ async function readProjectFile(path) {
 
   // Never use the iframe text fallback for index.html. Browsers render an
   // HTML response inside the iframe, so body.textContent would become the
-  // visible UI text rather than the HTML source. Use the clean shell below
-  // when the original index cannot be fetched.
-  const framed = path === 'index.html' ? null : await readViaSourceFrame(url, path);
+  // visible UI text rather than the HTML source. Build the fallback from the
+  // current live shell instead of an embedded, potentially stale copy.
+  const framed = path === 'index.html' ? null : await readViaSourceFrame(downloadUrl, path);
   if (framed) return { name: `puantaj-projesi/${path}`, text: framed };
   if (path === 'index.html') {
-    return { name: `puantaj-projesi/${path}`, text: fallbackIndexSource() };
+    return { name: `puantaj-projesi/${path}`, text: currentIndexSource() };
   }
   throw new Error(`${path}: source unavailable`);
 }
 
 async function readProjectFiles() {
+  assertProjectFileList();
   const results = [];
   for (const path of PROJECT_FILES) results.push(await readProjectFile(path));
   return results.map(file => ({ ...file, bytes: textEncoder.encode(file.text) }));
 }
 
+function fileByName(files, name) {
+  return files.find(file => file.name === `puantaj-projesi/${name}`);
+}
+
+function assertCurrentProjectSources(files) {
+  const required = ['index.html', 'main.js', 'electron-main.cjs', 'electron-preload.cjs', 'package.json'];
+  const missing = required.filter(name => !fileByName(files, name));
+  if (missing.length) throw new Error(`Eksik proje dosyaları: ${missing.join(', ')}`);
+
+  const index = fileByName(files, 'index.html').text;
+  const main = fileByName(files, 'main.js').text;
+  const electronMain = fileByName(files, 'electron-main.cjs').text;
+  let packageJson;
+  try {
+    packageJson = JSON.parse(fileByName(files, 'package.json').text);
+  } catch {
+    throw new Error('package.json geçerli JSON değil. Güncel dosya okunamadı.');
+  }
+
+  const checks = [
+    [/<script\s+type=["']module["']\s+src=["']main\.js(?:\?[^"']*)?["']\s*><\/script>/i, 'index.html ana modül bağlantısı'],
+    [/export\s+async\s+function\s+startApp\s*\(/, 'main.js startApp fonksiyonu'],
+    [/window\.__miniappBootComplete\?\./, 'main.js başlangıç tamamlanma bildirimi'],
+    [/did-finish-load/, 'electron-main.cjs yükleme bildirimi'],
+    [/"start"\s*:\s*"electron\s+\."/, 'package.json Electron başlangıcı']
+  ];
+  const sources = [index, main, main, electronMain, JSON.stringify(packageJson)];
+  const failed = checks.filter(([, label], index) => !checks[index][0].test(sources[index])).map(([, label]) => label);
+  if (failed.length) {
+    throw new Error(`Güncel başlangıç dosyası doğrulanamadı: ${failed.join(', ')}`);
+  }
+}
+
+async function sha256(bytes) {
+  if (!globalThis.crypto?.subtle) throw new Error('Dosya bütünlük doğrulaması kullanılamıyor.');
+  const digest = await globalThis.crypto.subtle.digest('SHA-256', bytes);
+  return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function createBuildManifest(files) {
+  const createdAt = new Date().toISOString();
+  const entries = await Promise.all(files.map(async file => ({
+    path: file.name.replace(/^puantaj-projesi\//, ''),
+    bytes: file.bytes.length,
+    sha256: await sha256(file.bytes)
+  })));
+  return {
+    format: 1,
+    buildId: `puantaj-${createdAt.replace(/[-:.TZ]/g, '')}`,
+    createdAt,
+    entryPoint: 'index.html → main.js',
+    sourceMode: window.desktopAPI?.readFile ? 'desktop-workspace' : 'preview-workspace',
+    projectFileCount: files.length,
+    files: entries
+  };
+}
+
 export async function downloadProject() {
   const files = await readProjectFiles();
+  assertCurrentProjectSources(files);
+  const manifest = await createBuildManifest(files);
+  const version = textEncoder.encode([
+    'PERSONEL NÖBET + PUANTAJ SİSTEMİ',
+    `Build ID: ${manifest.buildId}`,
+    `Oluşturulma: ${manifest.createdAt}`,
+    `Kaynak modu: ${manifest.sourceMode}`,
+    `Kaynak dosyası: ${manifest.projectFileCount}`,
+    'Başlangıç: index.html → main.js',
+    '',
+    'Bu dosya, ZIP arşivinin indirme sırasında güncel çalışma alanından oluşturulduğunu doğrulamak için eklenmiştir.',
+    'Dosya bütünlük listesi BUILD-MANIFEST.json içindedir.'
+  ].join('\n'));
+  const manifestBytes = textEncoder.encode(JSON.stringify(manifest, null, 2));
   const readme = textEncoder.encode([
     'Puantaj Sistemi proje kaynakları',
-    'Bu arşiv Miniapp çalışma alanındaki kaynak dosyalardan oluşturuldu.',
-    'Kaynaklar önizleme ortamındaki dosya yanıtlarından okunarak paketlendi.',
-    `Dosya sayısı: ${files.length}`,
-    `Oluşturulma: ${new Date().toISOString()}`
+    'Bu arşiv, indirme anında çalışma alanındaki güncel kaynak dosyalardan oluşturuldu.',
+    `Build ID: ${manifest.buildId}`,
+    `Dosya sayısı: ${manifest.projectFileCount}`,
+    `Oluşturulma: ${manifest.createdAt}`,
+    '',
+    'Kurulum: ZIP içeriğini yeni bir klasöre çıkarın, npm install ve npm start çalıştırın.',
+    'Bütünlük kontrolü için BUILD-VERSION.txt ve BUILD-MANIFEST.json dosyalarını saklayın.'
   ].join('\n'));
-  const archive = zipStore([...files, { name: 'puantaj-projesi/README.txt', bytes: readme }]);
+  const archive = zipStore([
+    ...files,
+    { name: 'puantaj-projesi/BUILD-VERSION.txt', bytes: version },
+    { name: 'puantaj-projesi/BUILD-MANIFEST.json', bytes: manifestBytes },
+    { name: 'puantaj-projesi/README.txt', bytes: readme }
+  ]);
   const blob = new Blob([archive], { type: 'application/zip' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');

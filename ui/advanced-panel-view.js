@@ -36,6 +36,7 @@ let onUpdate = () => {};
 
 const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
 const storage = () => window.miniappsAI?.storage;
+const AUTO_BACKUP_LIMIT = 6;
 
 function createOverlay() {
   if (overlay) return;
@@ -73,14 +74,6 @@ function renderCertificates(name) {
 function renderTemplates() {
   const list = getShiftTemplates();
   return list.length ? list.map(item => `<div class="advanced-row"><span><strong>${esc(item.name)}</strong><small>${esc(item.pattern)}</small></span><span class="advanced-actions"><button class="action-btn" data-template-apply="${item.id}" aria-label="${t('advanced.applyTemplate')}">↗</button><button class="action-btn action-btn-danger" data-template-delete="${item.id}">×</button></span></div>`).join('') : `<p class="advanced-muted">${t('advanced.noTemplates')}</p>`;
-}
-
-function setTheme(theme) {
-  document.documentElement.dataset.theme = theme;
-  if (storage()) storage().setItem('themePreference', theme).catch(() => {});
-  overlay?.querySelectorAll('[data-theme-choice]').forEach(button => {
-    button.classList.toggle('is-selected', button.dataset.themeChoice === theme);
-  });
 }
 
 function showSearch(value) {
@@ -160,11 +153,10 @@ async function runAiSuggestion() {
 export function showAdvancedPanel() {
   createOverlay();
   const firstPerson = getPersonnelList()[0] || '';
-  const theme = document.documentElement.dataset.theme || 'dark';
   overlay.innerHTML = `<div class="modal glass advanced-modal">
     <div class="advanced-heading"><h2 class="modal-title">${t('advanced.title')}</h2><button class="action-btn" id="advancedClose" aria-label="${t('modal.cancel')}">×</button></div>
     <div class="advanced-scroll">
-      <section class="advanced-section"><h3>${t('advanced.quickTitle')}</h3><div class="theme-choices" aria-label="${t('advanced.themeChoices')}"><button class="theme-choice theme-choice-light${theme === 'light' ? ' is-selected' : ''}" type="button" data-theme-choice="light">${t('advanced.lightTheme')}</button><button class="theme-choice theme-choice-sage${theme === 'sage' ? ' is-selected' : ''}" type="button" data-theme-choice="sage">${t('advanced.sageTheme')}</button><button class="theme-choice theme-choice-sand${theme === 'sand' ? ' is-selected' : ''}" type="button" data-theme-choice="sand">${t('advanced.sandTheme')}</button><button class="theme-choice theme-choice-dark${theme === 'dark' ? ' is-selected' : ''}" type="button" data-theme-choice="dark">${t('advanced.darkTheme')}</button></div><div class="advanced-grid"><button class="btn" id="payrollBtn">${t('advanced.payroll')}</button><button class="btn" id="weeklyPdfBtn">${t('advanced.weeklyPdf')}</button><button class="btn" id="jsonExportBtn">${t('advanced.exportJson')}</button><button class="btn" id="jsonImportBtn">${t('advanced.importJson')}</button><input type="file" id="jsonFile" accept="application/json" hidden></div><label class="modal-label" for="personSearch">${t('advanced.search')}</label><input class="modal-input" id="personSearch" placeholder="${t('advanced.searchPlaceholder')}"></section>
+      <section class="advanced-section"><h3>${t('advanced.quickTitle')}</h3><div class="advanced-grid"><button class="btn" id="payrollBtn">${t('advanced.payroll')}</button><button class="btn" id="weeklyPdfBtn">${t('advanced.weeklyPdf')}</button><button class="btn" id="jsonExportBtn">${t('advanced.exportJson')}</button><button class="btn" id="jsonImportBtn">${t('advanced.importJson')}</button><input type="file" id="jsonFile" accept="application/json" hidden></div><label class="modal-label" for="personSearch">${t('advanced.search')}</label><input class="modal-input" id="personSearch" placeholder="${t('advanced.searchPlaceholder')}"></section>
       ${renderPeriodLockSection()}
       ${renderPeriodApprovalSection()}
       ${renderAuditSection()}
@@ -180,7 +172,6 @@ export function showAdvancedPanel() {
 
   const q = selector => overlay.querySelector(selector);
   q('#advancedClose').onclick = hide; q('#advancedDone').onclick = hide;
-  overlay.querySelectorAll('[data-theme-choice]').forEach(button => button.onclick = () => setTheme(button.dataset.themeChoice));
   bindPeriodLockPanel(overlay, onUpdate);
   bindPeriodApprovalPanel(overlay, onUpdate);
   bindAuditPanel(overlay);
@@ -271,13 +262,30 @@ export function showAdvancedPanel() {
 export async function maybeAutoBackup() {
   if (!storage()) return;
   try {
-    const key = `puantaj_auto_backup_${getCurrentUnitId()}_${getYear()}_${getMonth()}`;
-    const raw = await storage().getItem(key);
+    const store = storage();
+    const unitId = getCurrentUnitId();
+    const key = `puantaj_auto_backup_${unitId}_${getYear()}_${getMonth()}`;
+    const indexKey = `puantaj_auto_backup_index_${unitId}`;
+    const raw = await store.getItem(key);
     let lastTime = 0;
     try { lastTime = raw ? Date.parse(JSON.parse(raw).createdAt) || 0 : 0; } catch (e) { lastTime = 0; }
     if (!lastTime || Date.now() - lastTime > 24 * 60 * 60 * 1000) {
-      await storage().setItem(key, JSON.stringify({ createdAt: new Date().toISOString(), snapshot: { ...getStateSnapshot(), leaveRequests: getLeaveSnapshot(), availability: getAvailabilitySnapshot(), dutyTemplates: getDutyTemplatesSnapshot(), periodLock: getPeriodLockState(), periodApproval: getPeriodApprovalState(), auditLog: getAuditSnapshot() } }));
+      await store.setItem(key, JSON.stringify({ createdAt: new Date().toISOString(), snapshot: { ...getStateSnapshot(), leaveRequests: getLeaveSnapshot(), availability: getAvailabilitySnapshot(), dutyTemplates: getDutyTemplatesSnapshot(), periodLock: getPeriodLockState(), periodApproval: getPeriodApprovalState(), auditLog: getAuditSnapshot() } }));
     }
+
+    let index = [];
+    try {
+      const savedIndex = await store.getItem(indexKey);
+      const parsed = savedIndex ? JSON.parse(savedIndex) : [];
+      index = Array.isArray(parsed) ? parsed.filter(item => item && item.key && item.createdAt) : [];
+    } catch (e) { index = []; }
+    index = index.filter(item => item.key !== key);
+    index.push({ key, createdAt: new Date().toISOString() });
+    while (index.length > AUTO_BACKUP_LIMIT) {
+      const removed = index.shift();
+      if (removed?.key && removed.key !== key) await store.removeItem(removed.key);
+    }
+    await store.setItem(indexKey, JSON.stringify(index));
   } catch (e) { /* backup is best effort */ }
 }
 

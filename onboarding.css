@@ -5,6 +5,4 @@
 .onboarding-card ol { grid-column:1 / -1; display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding-left:20px; color:rgba(255,255,255,.75); font-size:12px; line-height:1.45; }
 .onboarding-card li { padding:9px 10px; border-radius:8px; background:rgba(255,255,255,.06); }
 .onboarding-card #onboardingClose { justify-self:start; }
-[data-theme="light"] .onboarding-card h2 { color:#172033; }
-[data-theme="light"] .onboarding-card p, [data-theme="light"] .onboarding-card ol { color:#334155; }
 @media (max-width:700px) { .onboarding-card { grid-template-columns:1fr auto; } .onboarding-card ol { grid-template-columns:1fr; } }

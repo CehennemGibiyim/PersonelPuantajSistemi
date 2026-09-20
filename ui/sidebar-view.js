@@ -1,5 +1,6 @@
 import { t } from '../utils.js';
 import { getRole } from '../state.js';
+import { showToast } from './toast-view.js';
 
 const sections = [
   {
@@ -10,6 +11,7 @@ const sections = [
       ['duty', 'sidebar.dutyList', '▤'],
       ['punch', 'sidebar.payroll', '▦'],
       ['personnel', 'sidebar.personnel', '●'],
+      ['personAttendance', 'sidebar.personAttendance', '◫'],
       ['departments', 'sidebar.departments', '◇'],
       ['leave', 'sidebar.leave', '◷'],
       ['swap', 'sidebar.swap', '↔'],
@@ -35,10 +37,14 @@ const sections = [
     title: 'sidebar.export',
     icon: '⇩',
     items: [
-      ['excel', 'sidebar.excel', 'X'],
-      ['pdf', 'sidebar.pdf', 'P'],
-      ['csv', 'sidebar.csv', 'C'],
-      ['print', 'sidebar.print', '▣']
+      ['punchExcel', 'sidebar.punchExcel', 'X'],
+      ['punchPdf', 'sidebar.punchPdf', 'P'],
+      ['punchCsv', 'sidebar.punchCsv', 'C'],
+      ['punchPrint', 'sidebar.punchPrint', '▣'],
+      ['dutyExcel', 'sidebar.dutyExcel', 'X'],
+      ['dutyPdf', 'sidebar.dutyPdf', 'P'],
+      ['dutyCsv', 'sidebar.dutyCsv', 'C'],
+      ['dutyPrint', 'sidebar.dutyPrint', '▣']
     ]
   },
   {
@@ -54,7 +60,8 @@ const sections = [
   }
 ];
 
-const expandedSections = new Set(['operations', 'management']);
+// Menü ilk açılışta sade ve kapalı başlar. Kullanıcı yalnızca ihtiyaç duyduğu bölümü açar.
+const expandedSections = new Set();
 const restrictedActions = {
   editor: new Set(['departments', 'users', 'admins', 'project', 'json']),
   viewer: new Set(['departments', 'templates', 'query', 'fairness', 'users', 'admins', 'requests', 'backup', 'json', 'project'])
@@ -68,8 +75,12 @@ function visibleSections() {
   })).filter(section => section.items.length);
 }
 
-function itemMarkup(action, key, icon, active) {
-  return `<button class="sidebar-item${active ? ' active' : ''}" data-sidebar-action="${action}"${active ? ' aria-current="page"' : ''} type="button"><span class="sidebar-icon" aria-hidden="true">${icon}</span><span>${t(key)}</span></button>`;
+function itemMarkup(action, key, icon, active, activeSystem) {
+  const contextualKey = {
+    punch: { excel: 'sidebar.punchExcel', pdf: 'sidebar.punchPdf', csv: 'sidebar.punchCsv', print: 'sidebar.punchPrint' },
+    duty: { excel: 'sidebar.dutyExcel', pdf: 'sidebar.dutyPdf', csv: 'sidebar.dutyCsv', print: 'sidebar.dutyPrint' }
+  }[activeSystem]?.[action];
+  return `<button class="sidebar-item${active ? ' active' : ''}" data-sidebar-action="${action}"${active ? ' aria-current="page"' : ''} type="button"><span class="sidebar-icon" aria-hidden="true">${icon}</span><span>${t(contextualKey || key)}</span></button>`;
 }
 
 function sectionMarkup(section, activeSystem, activeAction) {
@@ -82,7 +93,7 @@ function sectionMarkup(section, activeSystem, activeAction) {
       <span class="sidebar-chevron" aria-hidden="true">⌄</span>
     </button>
     <div class="sidebar-group-items" id="sidebar-group-${section.id}"${expanded ? '' : ' hidden'}>
-      ${section.items.map(([action, key, icon]) => itemMarkup(action, key, icon, isActive(action))).join('')}
+      ${section.items.map(([action, key, icon]) => itemMarkup(action, key, icon, isActive(action), activeSystem)).join('')}
     </div>
   </div>`;
 }
@@ -135,6 +146,7 @@ export function renderSidebar(container, { activeSystem = 'punch', activeAction 
         if (typeof actions[action] === 'function') await actions[action](button);
       } catch (error) {
         console.error('Sidebar action failed:', error);
+        showToast(t('sidebar.actionFailed'), 'error');
       }
     });
   });

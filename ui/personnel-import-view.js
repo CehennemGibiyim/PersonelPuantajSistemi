@@ -3,6 +3,7 @@ import { addPersonnelToUnits, editPersonnel, getUnits, getCurrentUnitId, setCont
 import { syncPersonnelToOtherUnits } from '../personnel-assignment.js';
 import { t } from '../utils.js';
 import { showToast } from './toast-view.js';
+import { formatPersonnelName } from '../name-format.js';
 
 let overlay = null;
 let rows = [];
@@ -12,7 +13,7 @@ let mapping = {};
 let onComplete = () => {};
 
 const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
-const normalizeName = value => String(value || '').replace(/\s+/g, ' ').trim().toLocaleUpperCase('tr-TR');
+const normalizeName = value => formatPersonnelName(value);
 
 const fields = [
   { key: 'name', label: 'personnelImport.mapName', aliases: ['ad soyad', 'adi soyadi', 'personel adi soyadi', 'personel adı soyadı', 'ad', 'adi', 'first name', 'given name', 'full name', 'fullname', 'name'] },

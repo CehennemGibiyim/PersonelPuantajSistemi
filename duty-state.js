@@ -7,8 +7,31 @@ export function getDutyRecords() {
   return [...records];
 }
 
+function migrateLegacyRosterRecord(item) {
+  if (!item || !String(item.shiftLabel || '').trim()) return item;
+  const gross = Number(item.grossHours ?? item.hours);
+  if (!Number.isFinite(gross) || gross <= 12) return item;
+
+  // Eski çizelge hesabı 12 saati aşan nöbetlerde 1 saat düşüyordu;
+  // ortak puantaj kuralı artık 1,5 saat düşüyor. Yalnızca eski otomatik
+  // değerle birebir eşleşen alanları taşı, özel manuel değerleri koru.
+  const legacyNet = roundHours(gross - 1);
+  const net = getNetWorkedHours(gross);
+  if (legacyNet === net) return item;
+  const next = { ...item };
+  const legacyExtra = roundHours(Math.max(0, legacyNet - 7.5));
+  const nextExtra = roundHours(Math.max(0, net - 7.5));
+  ['netHours', 'hours', 'nightHours', 'netNightHours', 'holidayHours', 'netHolidayHours'].forEach(field => {
+    if (Number(item[field]) === legacyNet) next[field] = net;
+  });
+  ['extraHours', 'extraNetHours'].forEach(field => {
+    if (Number(item[field]) === legacyExtra) next[field] = nextExtra;
+  });
+  return next;
+}
+
 export function setDutyRecords(nextRecords) {
-  records = Array.isArray(nextRecords) ? nextRecords : [];
+  records = Array.isArray(nextRecords) ? nextRecords.map(migrateLegacyRosterRecord) : [];
 }
 
 export function getDutyColumns() {

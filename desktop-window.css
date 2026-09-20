@@ -1,0 +1,135 @@
+/* Frameless Electron window: the app supplies its own title bar. */
+.boot-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: grid;
+  place-items: center;
+  background: #102b35;
+  color: #effcf8;
+  font-family: Segoe UI, Arial, sans-serif;
+  transition: opacity .2s ease, visibility .2s ease;
+}
+.desktop-mode .boot-screen { top: 38px; }
+.boot-screen__controls {
+  position: absolute;
+  top: -38px;
+  right: 0;
+  display: none;
+  height: 38px;
+  align-items: stretch;
+  -webkit-app-region: no-drag;
+}
+.desktop-mode .boot-screen__controls { display: flex; }
+.boot-screen__controls button {
+  width: 46px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: #102b35;
+  color: #eaf7f5;
+  cursor: pointer;
+  font: 15px Segoe UI, Arial, sans-serif;
+  line-height: 1;
+  -webkit-app-region: no-drag;
+}
+.boot-screen__controls button:hover { background: rgba(255,255,255,.14); }
+.boot-screen__controls button:last-child:hover { background: #c64343; color: #fff; }
+.boot-screen__card {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 28px;
+  text-align: center;
+}
+.boot-screen__card span { color: #b7d4d1; font-size: 13px; }
+.boot-screen__mark {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #73d1c4;
+  color: #102b35;
+  font-size: 24px;
+  font-weight: 800;
+}
+.app-ready .boot-screen { opacity: 0; visibility: hidden; pointer-events: none; }
+#bootError { position: fixed !important; z-index: 10001; inset: 62px 24px 24px; overflow: auto; }
+
+html,
+body {
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  border-radius: 0 !important;
+}
+
+.desktop-titlebar {
+  display: none;
+  position: relative;
+  z-index: 10000;
+  height: 38px;
+  min-height: 38px;
+  align-items: center;
+  gap: 10px;
+  padding-left: 14px;
+  background: #102b35;
+  color: #eaf7f5;
+  user-select: none;
+  -webkit-app-region: drag;
+}
+
+.desktop-mode .desktop-titlebar { display: flex; }
+.desktop-titlebar__brand {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.desktop-titlebar__controls {
+  display: flex;
+  height: 100%;
+  -webkit-app-region: no-drag;
+}
+.desktop-titlebar__button {
+  width: 46px;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1;
+  -webkit-app-region: no-drag;
+}
+.desktop-titlebar__button:hover { background: rgba(255,255,255,.12); }
+.desktop-titlebar__button:focus-visible {
+  outline: 2px solid #73d1c4;
+  outline-offset: -3px;
+}
+.desktop-titlebar__button--close:hover { background: #c64343; color: #fff; }
+
+/* Keep the client area square as well as the native frameless window. */
+.desktop-mode .app {
+  min-height: calc(100vh - 38px);
+  border-radius: 0;
+}
+.desktop-mode .app::before { border-radius: 0; }
+.desktop-mode .app-layout { min-height: 100%; }
+.desktop-mode .sidebar { top: 38px; height: calc(100vh - 38px); }
+
+@media (max-width: 700px) {
+  .desktop-titlebar__button { width: 42px; }
+  .desktop-mode .sidebar { top: 38px; height: calc(100vh - 38px); }
+}

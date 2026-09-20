@@ -3,7 +3,7 @@ import { getPersonnelList, getCurrentWeek, getScheduleData, getDutyRecords, upda
 import { getAvailabilityStatus, availabilityStatusForCode, setAvailabilityStatus } from '../availability-state.js';
 import { showEdit, showDelete } from './modal-view.js';
 import { icon } from './icons.js';
-import { punchCodeForDuty, punchLabelForDuty } from './duty-roster-utils.js?v=5';
+import { punchCodeForDuty, punchLabelForDuty } from './duty-roster-utils.js?v=6';
 
 const WEEKLY_HOURS = { worker: 45, civil: 40 };
 

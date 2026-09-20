@@ -1,4 +1,4 @@
-import { t } from '../utils.js';
+import { getNetWorkedHours, t } from '../utils.js';
 
 export const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
 
@@ -59,8 +59,10 @@ export function hoursForShift(shiftLabel, holiday = false) {
   let gross = start !== null && end !== null ? end - start : 8;
   if (gross <= 0) gross += 24;
   gross = Math.min(24, Math.max(1, gross));
-  const net = gross >= 12 ? gross - 1 : gross >= 8 ? gross - 0.5 : gross;
-  const overnight = start !== null && end !== null && (end <= start || start >= 18 || end <= 7);
+  const net = getNetWorkedHours(gross);
+  // 06.00-14.00 gibi gündüz vardiyalarını gece saymadan, gece yarısını
+  // kapsayan 00.00-08.00 aralıklarını da doğru biçimde gece kabul et.
+  const overnight = start !== null && end !== null && (end <= start || start >= 18 || end <= 6);
   return {
     grossHours: Number(gross.toFixed(2)),
     netHours: Number(net.toFixed(2)),

@@ -1,29 +1,29 @@
 import { init, getAdmins, setCurrentWeek, getCurrentWeek, getUnitName, getCurrentUnitId, setCurrentUnit, getUnits, isAdmin, canEdit } from './state.js';
 import { getYear, getMonth, MONTHS_TR, t, initDesktopI18n } from './utils.js';
 import { renderTabs } from './ui/tabs-view.js';
-import { renderWeekTable } from './ui/week-table-view.js?v=32';
+import { renderWeekTable } from './ui/week-table-view.js?v=33';
 import { renderMonthlyTable } from './ui/monthly-table-view.js';
-import { renderMonthSelector } from './ui/month-selector-view.js?v=2';
+import { renderMonthSelector } from './ui/month-selector-view.js?v=4';
 import { initModal } from './ui/modal-view.js';
 import { initAdminModal } from './ui/admin-modal-view.js';
-import { initUnitModal } from './ui/unit-modal-view.js';
-import { initRoleModal } from './ui/role-modal-view.js';
+import { initUnitModal, showUnitModal } from './ui/unit-modal-view.js';
+import { initRoleModal, showRoleModal } from './ui/role-modal-view.js';
 import { initPersonnelDetailModal } from './ui/personnel-detail-modal-view.js';
 import { showPersonnelDirectory } from './ui/personnel-directory-view.js';
-import { initReportsPanel } from './ui/reports-panel-view.js';
-import { initContactPanel } from './ui/contact-panel-view.js';
-import { initWarningsPanel } from './ui/warnings-panel-view.js';
+import { initReportsPanel } from './ui/reports-panel-view.js?v=24';
+import { initContactPanel, showContactPanel } from './ui/contact-panel-view.js';
+import { initWarningsPanel, showWarningsPanel } from './ui/warnings-panel-view.js';
 import { initLanguageModal } from './ui/language-view.js';
-import { initSwapRequestsPanel } from './ui/swap-request-view.js';
+import { initSwapRequestsPanel, showSwapRequestsPanel } from './ui/swap-request-view.js';
 import { showToast } from './ui/toast-view.js';
-import { initExport, exportToExcel, exportToCsv } from './export.js?v=24';
-import { initPrintView, doPrint, showPrintOptions } from './ui/print-view.js?v=28';
-import { doDutyPrint } from './ui/duty-print-view.js?v=22';
-import { initAdvancedPanel, maybeAutoBackup } from './ui/advanced-panel-view.js?v=14';
-import { renderDutySystem } from './ui/duty-system-view.js?v=21';
+import { initExport, exportPunchToExcel, exportDutyToExcel, exportPunchToCsv, exportDutyToCsv } from './export.js?v=27';
+import { initPrintView, doPrint, showPrintOptions } from './ui/print-view.js?v=29';
+import { doDutyPrint } from './ui/duty-print-view.js?v=23';
+import { initAdvancedPanel, maybeAutoBackup, showAdvancedPanel } from './ui/advanced-panel-view.js?v=15';
+import { renderDutySystem } from './ui/duty-system-view.js?v=27';
 import { downloadProject } from './project-download.js';
-import { renderSidebar } from './ui/sidebar-view.js?v=4';
-import { exportJson } from './ui/advanced-panel-view.js?v=14';
+import { renderSidebar } from './ui/sidebar-view.js?v=6';
+import { exportJson } from './ui/advanced-panel-view.js?v=15';
 import { initAvailability } from './availability-state.js';
 import { initLeaveRequests, syncCurrentMonthLeaveRequests } from './leave-state.js';
 import { showAvailabilityCalendar } from './ui/availability-calendar-view.js';
@@ -36,18 +36,51 @@ import { verifyAppShell } from './ui/startup-checks.js';
 import { renderDashboard } from './ui/dashboard-view.js';
 import { renderFavorites } from './ui/favorites-view.js';
 import { renderSecurityStatus } from './ui/security-status-view.js';
+import { renderTemplatesWorkspace } from './ui/templates-workspace-view.js?v=6';
 import { initUnitAdmins, syncCurrentUnitAdmins } from './admin-state.js';
+import { initPersonnelPhotos } from './personnel-photo-state.js';
+import { showPersonnelAttendance } from './ui/personnel-attendance-view.js';
+import { ensureCurrentUnitMemberships } from './personnel-network.js';
 
-let tabContainer, tableContainer, weekLabel, monthlyContainer, monthSelectorContainer, workspaceView, dutySystemView, viewToolbar;
+let tabContainer, tableContainer, weekLabel, monthlyContainer, monthSelectorContainer, workspaceView, templatesWorkspaceView, dutySystemView, viewToolbar;
 let activeSystem = 'punch';
 let activeMenu = 'punch';
 const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
+const titleCaseTr = value => String(value ?? '').trim().toLocaleLowerCase('tr-TR').replace(/(^|[\s\-/])([\p{L}])/gu, (_, prefix, letter) => `${prefix}${letter.toLocaleUpperCase('tr-TR')}`);
+function initDesktopWindow() {
+  if (!window.desktopAPI?.isDesktop) return;
+  document.body.classList.add('desktop-mode');
+
+  const minimize = document.getElementById('windowMinimizeBtn');
+  const maximize = document.getElementById('windowMaximizeBtn');
+  const close = document.getElementById('windowCloseBtn');
+  minimize?.addEventListener('click', () => window.desktopAPI.minimizeWindow());
+  maximize?.addEventListener('click', () => window.desktopAPI.toggleMaximizeWindow());
+  close?.addEventListener('click', () => window.desktopAPI.closeWindow());
+
+  const titlebar = document.getElementById('desktopTitlebar');
+  titlebar?.addEventListener('dblclick', event => {
+    if (event.target.closest('.desktop-titlebar__controls')) return;
+    window.desktopAPI.toggleMaximizeWindow();
+  });
+
+  document.documentElement.dataset.theme = 'dark';
+}
+function returnToPunchWorkspace() {
+  activeSystem = 'punch';
+  activeMenu = 'punch';
+  setCurrentWeek(0);
+  renderAll();
+}
 
 function renderAll() {
   const year = getYear();
   const month = getMonth();
   const unit = getUnitName();
   const isDutySystem = activeSystem === 'duty';
+  const isPunchSurface = activeSystem === 'punch' && activeMenu === 'punch';
+  const isReportsSurface = activeSystem === 'punch' && ['fairness', 'backup'].includes(activeMenu);
+  const isTemplatesSurface = activeSystem === 'punch' && activeMenu === 'templates';
   const subtitle = document.getElementById('appSubtitle');
   const title = document.querySelector('[data-i18n="app.title"]');
   if (title) title.textContent = t('app.title');
@@ -59,19 +92,36 @@ function renderAll() {
   renderViewToolbar();
   const dashboard = document.getElementById('dashboardView');
   if (dashboard) {
-    dashboard.style.display = isDutySystem ? 'none' : '';
-    if (!isDutySystem) {
+    dashboard.style.display = isPunchSurface ? '' : 'none';
+    if (isPunchSurface) {
       const actions = dashboardActions();
       renderDashboard(dashboard, actions);
       renderFavorites(dashboard.querySelector('[data-favorites-host]'), actions);
       renderSecurityStatus(dashboard.querySelector('[data-security-status]'), actions.security);
     }
   }
-  if (workspaceView) workspaceView.style.display = isDutySystem ? 'none' : '';
+  if (document.getElementById('onboardingView')) document.getElementById('onboardingView').style.display = isPunchSurface ? '' : 'none';
+  if (viewToolbar) viewToolbar.style.display = isPunchSurface || isDutySystem || isTemplatesSurface ? '' : 'none';
+  if (workspaceView) {
+    workspaceView.style.display = isPunchSurface || isReportsSurface ? '' : 'none';
+    workspaceView.classList.toggle('reports-only', isReportsSurface);
+  }
+  if (templatesWorkspaceView) {
+    templatesWorkspaceView.style.display = isTemplatesSurface ? '' : 'none';
+    if (isTemplatesSurface) renderTemplatesWorkspace(templatesWorkspaceView, renderAll, returnToPunchWorkspace, () => {
+      activeMenu = 'duty';
+      activeSystem = 'duty';
+      renderAll();
+    });
+  }
   if (dutySystemView) dutySystemView.style.display = isDutySystem ? 'block' : 'none';
   if (isDutySystem) {
     renderUnitSelector();
     renderDutySystem(dutySystemView, renderAll);
+    updateEditability();
+    return;
+  }
+  if (isTemplatesSurface) {
     updateEditability();
     return;
   }
@@ -81,7 +131,7 @@ function renderAll() {
   renderTabs(tabContainer, renderAll);
 
   const week = getCurrentWeek();
-  if (week === -1) {
+  if (week === -1 || isReportsSurface) {
     document.getElementById('monthlyLabel').style.display = 'none';
     monthlyContainer.style.display = 'none';
     tableContainer.innerHTML = '';
@@ -116,18 +166,21 @@ function renderHeaderActions() {
 function renderViewToolbar() {
   if (!viewToolbar) return;
   const isDutySystem = activeSystem === 'duty';
+  const exportLabel = t(isDutySystem ? 'dutySystem.exportBtn' : 'app.exportBtn');
+  const printLabel = t(isDutySystem ? 'dutySystem.printBtn' : 'app.punchPrintBtn');
+  const viewHint = t(isDutySystem ? 'dutySystem.viewActionsHint' : 'app.viewActionsHint');
   viewToolbar.innerHTML = `
     <div class="view-toolbar-context">
       <span class="view-toolbar-label">${t(isDutySystem ? 'dutySystem.pageTitle' : 'app.punchSystem')}</span>
-      <span class="view-toolbar-hint">${t('app.viewActionsHint')}</span>
+      <span class="view-toolbar-hint">${viewHint}</span>
       <span class="period-lock-inline ${isPeriodLocked() ? 'is-locked' : 'is-open'}">${t(isPeriodLocked() ? 'periodLock.closed' : 'periodLock.open')}</span>
     </div>
     <div class="view-toolbar-actions">
-      <button class="btn btn-primary" id="contextPrintBtn" type="button"><span class="toolbar-icon" aria-hidden="true">⎙</span>${t('app.printBtn')}</button>
-      <button class="btn" id="contextExcelBtn" type="button"><span class="toolbar-icon" aria-hidden="true">⇩</span>${t('app.exportBtn')}</button>
+      <button class="btn btn-primary" id="contextPrintBtn" type="button"><span class="toolbar-icon" aria-hidden="true">⎙</span>${printLabel}</button>
+      <button class="btn" id="contextExcelBtn" type="button"><span class="toolbar-icon" aria-hidden="true">⇩</span>${exportLabel}</button>
     </div>`;
   viewToolbar.querySelector('#contextPrintBtn')?.addEventListener('click', isDutySystem ? doDutyPrint : showPrintOptions);
-  viewToolbar.querySelector('#contextExcelBtn')?.addEventListener('click', exportToExcel);
+  viewToolbar.querySelector('#contextExcelBtn')?.addEventListener('click', isDutySystem ? exportDutyToExcel : exportPunchToExcel);
 }
 
 async function handleProjectDownload(button) {
@@ -184,7 +237,9 @@ function sidebarActions() {
     findOverlay();
   };
   const openWorkspacePanel = (action, callback) => {
-    markMenu(action);
+    activeSystem = 'punch';
+    activeMenu = action;
+    renderAll();
     callback();
     decorateWorkspaceOverlay();
   };
@@ -200,24 +255,29 @@ function sidebarActions() {
   return {
     punch: showPunch,
     duty: showDuty,
-    personnel: () => { activeMenu = 'personnel'; showPersonnelDirectory(renderAll); renderSidebar(document.getElementById('sidebar'), { activeSystem, activeAction: activeMenu, actions: sidebarActions() }); },
-    departments: () => openWorkspacePanel('departments', () => click('manageUnitsBtn')),
+    personnel: () => openWorkspacePanel('personnel', () => showPersonnelDirectory(renderAll, returnToPunchWorkspace)),
+    personAttendance: () => openWorkspacePanel('personAttendance', () => showPersonnelAttendance('', returnToPunchWorkspace)),
+    departments: () => openWorkspacePanel('departments', showUnitModal),
     leave: () => openWorkspacePanel('leave', () => showAvailabilityCalendar(renderAll)),
-    swap: () => openWorkspacePanel('swap', () => click('swapRequestsBtn')),
-    templates: () => openWorkspacePanel('templates', () => click('advancedBtn')),
+    swap: () => openWorkspacePanel('swap', showSwapRequestsPanel),
+    templates: () => { activeSystem = 'punch'; activeMenu = 'templates'; renderAll(); },
     query: () => { showPunch(); activeMenu = 'query'; renderSidebar(document.getElementById('sidebar'), { activeSystem, activeAction: activeMenu, actions: sidebarActions() }); setTimeout(() => { click('advancedBtn'); decorateWorkspaceOverlay(); }, 0); },
     fairness: () => showReports(),
-    users: () => openWorkspacePanel('users', () => click('roleBtn')),
-    admins: () => openWorkspacePanel('admins', () => click('editAdminsBtn')),
-    requests: () => openWorkspacePanel('requests', () => click('swapRequestsBtn')),
-    warnings: () => openWorkspacePanel('warnings', () => click('warningsBtn')),
-    contact: () => openWorkspacePanel('contact', () => click('contactBtn')),
+    users: () => openWorkspacePanel('users', showRoleModal),
+    admins: () => openWorkspacePanel('admins', () => document.getElementById('editAdminsBtn')?.click()),
+    requests: () => openWorkspacePanel('requests', showSwapRequestsPanel),
+    warnings: () => openWorkspacePanel('warnings', showWarningsPanel),
+    contact: () => openWorkspacePanel('contact', showContactPanel),
     backup: () => showReports('backupCurrentBtn'),
     json: () => { markMenu('json'); exportJson(); },
-    excel: () => { markMenu('excel'); exportToExcel(); },
-    pdf: () => { markMenu('pdf'); activeSystem === 'duty' ? doDutyPrint() : showPrintOptions(); },
-    csv: () => { markMenu('csv'); exportToCsv(); },
-    print: () => { markMenu('print'); activeSystem === 'duty' ? doDutyPrint() : showPrintOptions(); },
+    punchExcel: () => { markMenu('punchExcel'); exportPunchToExcel(); },
+    punchPdf: () => { markMenu('punchPdf'); showPrintOptions(); },
+    punchCsv: () => { markMenu('punchCsv'); exportPunchToCsv(); },
+    punchPrint: () => { markMenu('punchPrint'); showPrintOptions(); },
+    dutyExcel: () => { markMenu('dutyExcel'); exportDutyToExcel(); },
+    dutyPdf: () => { markMenu('dutyPdf'); doDutyPrint(); },
+    dutyCsv: () => { markMenu('dutyCsv'); exportDutyToCsv(); },
+    dutyPrint: () => { markMenu('dutyPrint'); doDutyPrint(); },
     refresh: () => { markMenu('refresh'); renderAll(); showToast(t('app.toastRefreshed'), 'info'); },
     project: button => { markMenu('project'); handleProjectDownload(button); }
   };
@@ -279,23 +339,26 @@ function renderUnitSelector() {
   const units = getUnits();
   const currentId = getCurrentUnitId();
 
-  let html = `<select id="unitSelect" class="day-input" style="min-width:160px;padding:6px 10px;font-size:13px;background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.2)">`;
+  let html = `<div class="unit-selector-bar" role="tablist" aria-label="${esc(t('sidebar.departments'))}">`;
   units.forEach(u => {
-    html += `<option value="${esc(u.id)}" ${u.id === currentId ? 'selected' : ''}>${esc(u.name)}</option>`;
+    html += `<button class="unit-chip${u.id === currentId ? ' active' : ''}" type="button" role="tab" aria-selected="${u.id === currentId}" data-unit-id="${esc(u.id)}"><span class="unit-chip-dot" aria-hidden="true"></span><span>${esc(titleCaseTr(u.name))}</span></button>`;
   });
-  html += `</select>`;
+  html += `</div>`;
 
   if (isAdmin()) {
-    html += `<button class="btn" id="manageUnitsBtn" style="padding:6px 10px;font-size:12px" aria-label="Birim Yönetimi">⋯</button>`;
+    html += `<button class="btn unit-manage-btn" id="manageUnitsBtn" type="button" aria-label="${esc(t('unit.title'))}">⋯</button>`;
   }
 
   container.innerHTML = html;
 
-  const select = container.querySelector('#unitSelect');
-  if (select) {
-    select.addEventListener('change', async () => {
-      setCurrentUnit(select.value);
+  container.querySelectorAll('[data-unit-id]').forEach(button => {
+    button.addEventListener('click', async () => {
+      const nextId = button.dataset.unitId;
+      if (!nextId || nextId === getCurrentUnitId()) return;
+      setCurrentUnit(nextId);
       await init();
+      await ensureCurrentUnitMemberships(getUnits(), getCurrentUnitId());
+      await initPersonnelPhotos();
       await initAvailability();
       await initLeaveRequests();
       syncCurrentMonthLeaveRequests();
@@ -306,9 +369,9 @@ function renderUnitSelector() {
       await initUnitAdmins();
       await syncCurrentUnitAdmins();
       renderAll();
-      showToast(`${getUnitName()} birimi yüklendi.`, 'info');
+      showToast(`${titleCaseTr(getUnitName())} birimi yüklendi.`, 'info');
     });
-  }
+  });
 
   const manageBtn = container.querySelector('#manageUnitsBtn');
   if (manageBtn) {
@@ -361,6 +424,7 @@ function updateEditability() {
 async function handleMonthChange() {
   setCurrentWeek(0);
   await init();
+  await ensureCurrentUnitMemberships(getUnits(), getCurrentUnitId());
   await initAvailability();
   await initLeaveRequests();
   syncCurrentMonthLeaveRequests();
@@ -434,37 +498,73 @@ function bindButtons() {
   initAdvancedPanel(document.getElementById('advancedBtn'), () => renderAll());
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-  tabContainer = document.getElementById('weekTabs');
-  tableContainer = document.getElementById('tableContainer');
-  weekLabel = document.getElementById('weekLabel');
-  monthlyContainer = document.getElementById('monthlyContainer');
-  monthSelectorContainer = document.getElementById('monthSelector');
-  workspaceView = document.getElementById('workspaceView');
-  dutySystemView = document.getElementById('dutySystemView');
-  viewToolbar = document.getElementById('viewToolbar');
-
-  await initDesktopI18n();
-  await init();
-  await initAvailability();
-  await initLeaveRequests();
-  syncCurrentMonthLeaveRequests();
-  await initDutyTemplates();
-  await initPeriodLock(getCurrentUnitId(), getYear(), getMonth());
-  await initPeriodApproval(getCurrentUnitId(), getYear(), getMonth());
-  await initAuditLog();
-  await initUnitAdmins();
-  await syncCurrentUnitAdmins();
-  maybeAutoBackup();
+export async function startApp() {
   try {
-    const savedTheme = await window.miniappsAI?.storage?.getItem('themePreference');
-    if (['light', 'dark', 'sage', 'sand'].includes(savedTheme)) document.documentElement.dataset.theme = savedTheme;
-  } catch (e) { /* theme preference is optional */ }
-  renderMonthSelector(monthSelectorContainer, handleMonthChange);
-  renderHeaderActions();
-  renderBottomActions();
-  bindButtons();
-  renderAll();
-  await renderOnboarding(document.getElementById('onboardingView'));
-  verifyAppShell();
-});
+    const markBootStage = stage => {
+      window.__miniappBootStage = stage;
+      console.log(`[Renderer] Başlangıç aşaması: ${stage}`);
+    };
+    markBootStage('arayüz alanları hazırlanıyor');
+    tabContainer = document.getElementById('weekTabs');
+    tableContainer = document.getElementById('tableContainer');
+    weekLabel = document.getElementById('weekLabel');
+    monthlyContainer = document.getElementById('monthlyContainer');
+    monthSelectorContainer = document.getElementById('monthSelector');
+    workspaceView = document.getElementById('workspaceView');
+    templatesWorkspaceView = document.getElementById('templatesWorkspaceView');
+    dutySystemView = document.getElementById('dutySystemView');
+    viewToolbar = document.getElementById('viewToolbar');
+
+    markBootStage('dil dosyası yükleniyor');
+    await initDesktopI18n();
+    initDesktopWindow();
+    markBootStage('ana puantaj verisi yükleniyor');
+    await init();
+    markBootStage('personel birimleri eşitleniyor');
+    await ensureCurrentUnitMemberships(getUnits(), getCurrentUnitId());
+    markBootStage('personel fotoğrafları hazırlanıyor');
+    await initPersonnelPhotos();
+    markBootStage('uygunluk ve izin kayıtları yükleniyor');
+    await initAvailability();
+    await initLeaveRequests();
+    syncCurrentMonthLeaveRequests();
+    markBootStage('şablon ve dönem ayarları yükleniyor');
+    await initDutyTemplates();
+    await initPeriodLock(getCurrentUnitId(), getYear(), getMonth());
+    await initPeriodApproval(getCurrentUnitId(), getYear(), getMonth());
+    await initAuditLog();
+    await initUnitAdmins();
+    await syncCurrentUnitAdmins();
+    markBootStage('ana ekran çiziliyor');
+    maybeAutoBackup();
+    document.documentElement.dataset.theme = 'dark';
+    renderMonthSelector(monthSelectorContainer, handleMonthChange);
+    renderHeaderActions();
+    renderBottomActions();
+    bindButtons();
+    renderAll();
+    await renderOnboarding(document.getElementById('onboardingView'));
+    verifyAppShell();
+    document.documentElement.classList.add('app-ready');
+    markBootStage('tamamlandı');
+    window.__miniappBootComplete?.();
+  } catch (error) {
+    console.error('[Renderer] Başlangıç hatası:', error);
+    window.__miniappReportBootError?.(error?.stack || error?.message || String(error));
+  }
+}
+
+// Electron ve tarayıcıda module script doğrudan yüklendiğinde uygulamayı
+// başlat. startApp yalnızca bir kez çalışır; böylece yanlışlıkla ikinci bir
+// başlangıç çağrısı yapılmaz.
+let appStartPromise = null;
+function startAppOnce() {
+  if (!appStartPromise) appStartPromise = startApp();
+  return appStartPromise;
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startAppOnce, { once: true });
+} else {
+  startAppOnce();
+}

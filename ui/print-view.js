@@ -1,7 +1,7 @@
 import { getPersonnelList, getScheduleData, getDutyRecords, getAdmins, getPersonnelType, getTotalNightHours, getNightHours, getUnitName, getMonthlyTotal, getWeeklyTotal } from '../state.js';
 import { getAvailabilityStatus } from '../availability-state.js';
 import { getYear, getMonth, MONTHS_TR, getWeeks, getDayName, isWeekend, isSaturday, isHoliday, t } from '../utils.js';
-import { punchLabelForDuty } from './duty-roster-utils.js?v=5';
+import { punchLabelForDuty } from './duty-roster-utils.js?v=6';
 import { loadMonthlyNote, setMonthlyNote, getMonthlyNote } from '../period-note-state.js';
 
 let container = null;

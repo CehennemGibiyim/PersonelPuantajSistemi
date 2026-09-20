@@ -2,7 +2,7 @@ import { getPersonnelList, getDutyRecords, getDutyColumns, setDutyColumns, setDu
 import { updateDutyColumnLabels } from '../duty-state.js';
 import { getDaysInMonth, getMonth, getFullDayName, isWeekend, isSaturday, isHoliday, t } from '../utils.js';
 import { showToast } from './toast-view.js';
-import { esc, columnKey, effectiveColumns, formatColumn, hoursForShift, recordMatchesColumn } from './duty-roster-utils.js?v=5';
+import { esc, columnKey, effectiveColumns, formatColumn, hoursForShift, recordMatchesColumn } from './duty-roster-utils.js?v=6';
 import { getDutyWarnings, getDutyWarningSummary, warningText, isWarningFor } from './duty-conflict-utils.js';
 import { getAvailabilityStatus } from '../availability-state.js';
 import { renderDutyTemplatePanel, bindDutyTemplatePanel } from './duty-template-panel-view.js';
@@ -11,6 +11,8 @@ import { showDutyTemplateImport } from './duty-template-import-view.js';
 import { isPeriodLocked } from '../period-lock-state.js';
 
 const num = value => Number(value) || 0;
+const titleCaseTr = value => String(value ?? '').trim().toLocaleLowerCase('tr-TR').replace(/(^|[\s\-/])([\p{L}])/gu, (_, prefix, letter) => `${prefix}${letter.toLocaleUpperCase('tr-TR')}`);
+let activeDutyServiceFilter = 'all';
 
 function metrics(records) {
   return records.reduce((sum, item) => {
@@ -29,6 +31,16 @@ function card(label, value, accent = false) {
 
 function recordFor(records, day, column) {
   return records.find(item => Number(item.day) === day && recordMatchesColumn(item, column));
+}
+
+function serviceFilterBar(columns) {
+  const services = [...new Set(columns.map(column => String(column.service || '').trim()).filter(Boolean))];
+  if (!services.length) return '';
+  if (activeDutyServiceFilter !== 'all' && !services.includes(activeDutyServiceFilter)) activeDutyServiceFilter = 'all';
+  const buttons = [['all', t('dutySystem.allServices')], ...services.map(service => [service, titleCaseTr(service)])]
+    .map(([value, label]) => `<button class="duty-service-tab${activeDutyServiceFilter === value ? ' active' : ''}" type="button" data-duty-service-filter="${esc(value)}" aria-pressed="${activeDutyServiceFilter === value}">${esc(label)}</button>`)
+    .join('');
+  return `<section class="duty-service-bar" aria-label="${esc(t('dutySystem.service'))}"><span class="duty-service-label">${esc(t('dutySystem.service'))}</span><div class="duty-service-tabs">${buttons}</div></section>`;
 }
 
 function recalculateColumnRecords(columnKey, service, shiftLabel) {
@@ -73,12 +85,12 @@ function rosterTable(personnel, records, columns, editable) {
     const classes = rosterDayClasses(day);
     rows.push(`<tr${classes ? ` class="${classes}"` : ''}><td class="duty-roster-date">${day}.${String(getMonth() + 1).padStart(2, '0')}</td><td class="duty-roster-day">${esc(getFullDayName(day))}</td>${columns.map(column => { const item = recordFor(records, day, column); return `<td>${personSelect(personnel, item?.person || '', day, column, !editable, records)}</td>`; }).join('')}</tr>`);
   }
-  return `<section class="glass duty-roster-card"><div class="duty-section-heading"><div><h3>${t('dutySystem.rosterTitle')}</h3><p>${t('dutySystem.rosterHint')}</p></div><span class="duty-record-count">${records.length}</span></div><div class="duty-roster-wrap"><table class="duty-roster-table"><thead><tr><th>${t('dutySystem.printDate')}</th><th>${t('dutySystem.printDay')}</th>${columns.map(column => `<th>${esc(formatColumn(column))}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div></section>`;
+  return `<section class="glass duty-roster-card"><div class="duty-section-heading"><div><h3>${t('dutySystem.rosterTitle')}</h3><p>${t('dutySystem.rosterHint')}</p></div><span class="duty-record-count">${records.length}</span></div><div class="duty-roster-wrap"><table class="duty-roster-table"><thead><tr><th>${t('dutySystem.printDate')}</th><th>${t('dutySystem.printDay')}</th>${columns.map(column => `<th><span class="duty-roster-service">${esc(titleCaseTr(column.service))}</span><span class="duty-roster-shift">${esc(titleCaseTr(column.shiftLabel))}</span></th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div></section>`;
 }
 
 function columnEditor(columns, editable) {
-  const items = columns.map((column, index) => `<div class="duty-column-row" data-duty-column-row="${esc(column.key)}"><span class="duty-column-order">${esc(t('dutySystem.columnPosition', { position: index + 1 }))}</span><span class="duty-column-info"><strong>${esc(column.service)}</strong><small>${esc(column.shiftLabel)}</small></span><div class="duty-column-actions"><button class="action-btn" data-duty-column-edit="${esc(column.key)}" aria-label="${t('dutySystem.editColumn')}" title="${t('dutySystem.editColumn')}"${editable ? '' : ' disabled'}>✎</button><button class="action-btn" data-duty-column-move="${esc(column.key)}" data-duty-column-direction="up" aria-label="${t('dutySystem.moveColumnUp')}" title="${t('dutySystem.moveColumnUp')}"${!editable || index === 0 ? ' disabled' : ''}>↑</button><button class="action-btn" data-duty-column-move="${esc(column.key)}" data-duty-column-direction="down" aria-label="${t('dutySystem.moveColumnDown')}" title="${t('dutySystem.moveColumnDown')}"${!editable || index === columns.length - 1 ? ' disabled' : ''}>↓</button><button class="action-btn action-btn-danger" data-duty-column-remove="${esc(column.key)}" aria-label="${t('dutySystem.removeColumn')}"${editable ? '' : ' style="display:none"'}>×</button></div></div>`).join('');
-  return `<section class="glass duty-columns-card"><div class="duty-section-heading"><div><h3>${t('dutySystem.columnsTitle')}</h3><p>${t('dutySystem.columnsHint')}</p></div></div><div class="duty-column-form"><label>${t('dutySystem.service')}<input class="modal-input" id="dutyColumnService" placeholder="${t('dutySystem.servicePlaceholder')}"${editable ? '' : ' disabled'}></label><label>${t('dutySystem.shiftLabel')}<input class="modal-input" id="dutyColumnShift" placeholder="${t('dutySystem.shiftPlaceholder')}"${editable ? '' : ' disabled'}></label><button class="btn btn-primary" id="dutyColumnAdd"${editable ? '' : ' disabled'}>${t('dutySystem.addColumn')}</button><button class="btn" id="dutyColumnImport"${editable ? '' : ' disabled'}>${t('dutySystem.importExcel')}</button><button class="btn" id="dutyDraftBtn"${editable ? '' : ' disabled'}>${t('dutySystem.createDraft')}</button></div><div class="duty-column-list">${items}</div></section>`;
+  const items = columns.map((column, index) => `<div class="duty-column-row" data-duty-column-row="${esc(column.key)}"><span class="duty-column-order">${esc(t('dutySystem.columnPosition', { position: index + 1 }))}</span><span class="duty-column-info"><strong>${esc(titleCaseTr(column.service))}</strong><small>${esc(titleCaseTr(column.shiftLabel))}</small></span><div class="duty-column-actions"><button class="action-btn" data-duty-column-edit="${esc(column.key)}" aria-label="${t('dutySystem.editColumn')}" title="${t('dutySystem.editColumn')}"${editable ? '' : ' disabled'}>✎</button><button class="action-btn" data-duty-column-move="${esc(column.key)}" data-duty-column-direction="up" aria-label="${t('dutySystem.moveColumnUp')}" title="${t('dutySystem.moveColumnUp')}"${!editable || index === 0 ? ' disabled' : ''}>↑</button><button class="action-btn" data-duty-column-move="${esc(column.key)}" data-duty-column-direction="down" aria-label="${t('dutySystem.moveColumnDown')}" title="${t('dutySystem.moveColumnDown')}"${!editable || index === columns.length - 1 ? ' disabled' : ''}>↓</button><button class="action-btn action-btn-danger" data-duty-column-remove="${esc(column.key)}" aria-label="${t('dutySystem.removeColumn')}"${editable ? '' : ' style="display:none"'}>×</button></div></div>`).join('');
+  return `<section class="glass duty-columns-card"><div class="duty-section-heading"><div><h3>${t('dutySystem.columnsTitle')}</h3><p>${t('dutySystem.columnsHint')}</p></div></div><div class="duty-column-form"><label>${t('dutySystem.service')}<input class="modal-input" id="dutyColumnService" placeholder="${t('dutySystem.servicePlaceholder')}"${editable ? '' : ' disabled'}></label><label>${t('dutySystem.shiftLabel')}<input class="modal-input" id="dutyColumnShift" placeholder="${t('dutySystem.shiftPlaceholder')}"${editable ? '' : ' disabled'}></label><button class="btn btn-primary" id="dutyColumnAdd"${editable ? '' : ' disabled'}>${t('dutySystem.addColumn')}</button><button class="btn" id="dutyColumnImport"${editable ? '' : ' disabled'}>${t('dutySystem.importExcel')}</button><button class="btn" id="dutyDraftBtn"${editable ? '' : ' disabled'}>${t('dutySystem.createDraft')}</button><button class="btn btn-auto-assign" id="dutyAutoAssignBtn"${editable ? '' : ' disabled'}>${t('dutySystem.autoAssign')}</button><p class="duty-auto-hint">${t('dutySystem.autoAssignHint')}</p></div><div class="duty-column-list">${items}</div></section>`;
 }
 
 function conflictPanel(records) {
@@ -118,6 +130,43 @@ function createBalancedDraft(personnel, columns) {
   return true;
 }
 
+function autoAssignPersonnel(personnel, columns) {
+  if (!personnel.length || !columns.length) return 0;
+  const existing = getDutyRecords();
+  const counts = new Map(personnel.map(name => [name, 0]));
+  const lastDay = new Map();
+  existing.forEach(item => {
+    if (!counts.has(item.person)) return;
+    counts.set(item.person, counts.get(item.person) + 1);
+    lastDay.set(item.person, Math.max(lastDay.get(item.person) || 0, Number(item.day) || 0));
+  });
+
+  let assigned = 0;
+  for (let day = 1; day <= getDaysInMonth(); day += 1) {
+    const usedToday = new Set(existing.filter(item => Number(item.day) === day).map(item => item.person));
+    for (const column of columns) {
+      if (recordFor(existing, day, column)) continue;
+      const candidates = personnel
+        .filter(name => !usedToday.has(name) && ['available', 'preferred'].includes(getAvailabilityStatus(name, day)))
+        .sort((a, b) => {
+          const restA = lastDay.has(a) && day - lastDay.get(a) <= 1 ? 1 : 0;
+          const restB = lastDay.has(b) && day - lastDay.get(b) <= 1 ? 1 : 0;
+          return restA - restB || counts.get(a) - counts.get(b) || a.localeCompare(b, 'tr');
+        });
+      const person = candidates[0];
+      if (!person) continue;
+      const calculated = hoursForShift(column.shiftLabel, isHoliday(day));
+      const saved = setDutyAssignment({ person, day, columnKey: column.key, service: column.service, shiftLabel: column.shiftLabel, ...calculated });
+      if (!saved) continue;
+      usedToday.add(person);
+      counts.set(person, counts.get(person) + 1);
+      lastDay.set(person, day);
+      assigned += 1;
+    }
+  }
+  return assigned;
+}
+
 export function renderDutySystem(container, onUpdate = () => {}) {
   const personnel = getPersonnelList();
   const records = getDutyRecords();
@@ -131,10 +180,15 @@ export function renderDutySystem(container, onUpdate = () => {}) {
   const editable = canEdit() && !isPeriodLocked();
 
   const columnContent = personnel.length ? columnEditor(columns, editable) : `<section class="glass duty-no-personnel"><strong>${t('dutySystem.noPersonnel')}</strong><p>${t('dutySystem.noPersonnelHint')}</p></section>`;
-  const rosterContent = personnel.length && columns.length ? rosterTable(personnel, records, columns, editable) : (personnel.length ? emptyColumnsCard() : '');
-  container.innerHTML = `<div class="duty-system"><div class="duty-summary">${card(t('dutySystem.totalRecords'), totals.count, true)}${card(t('dutySystem.totalGross'), `${totals.gross}${t('advanced.grossShort')}`)}${card(t('dutySystem.totalNet'), `${totals.net}${t('advanced.workedShort')}`, true)}${card(t('dutySystem.totalNight'), `${totals.night}${t('advanced.nightShort')}`)}${card(t('dutySystem.totalExtra'), `${totals.extra}${t('advanced.extraShort')}`)}</div>${conflictPanel(records)}${columnContent}${renderDutyTemplatePanel(editable)}${rosterContent}</div>`;
+  const visibleColumns = activeDutyServiceFilter === 'all' ? columns : columns.filter(column => column.service === activeDutyServiceFilter);
+  const rosterContent = personnel.length && visibleColumns.length ? rosterTable(personnel, records, visibleColumns, editable) : (personnel.length ? emptyColumnsCard() : '');
+  container.innerHTML = `<div class="duty-system">${serviceFilterBar(columns)}<div class="duty-summary">${card(t('dutySystem.totalRecords'), totals.count, true)}${card(t('dutySystem.totalGross'), `${totals.gross}${t('advanced.grossShort')}`)}${card(t('dutySystem.totalNet'), `${totals.net}${t('advanced.workedShort')}`, true)}${card(t('dutySystem.totalNight'), `${totals.night}${t('advanced.nightShort')}`)}${card(t('dutySystem.totalExtra'), `${totals.extra}${t('advanced.extraShort')}`)}</div>${conflictPanel(records)}${columnContent}${renderDutyTemplatePanel(editable)}${rosterContent}</div>`;
 
   bindDutyTemplatePanel(container, columns, records, editable, onUpdate);
+  container.querySelectorAll('[data-duty-service-filter]').forEach(button => button.addEventListener('click', () => {
+    activeDutyServiceFilter = button.dataset.dutyServiceFilter || 'all';
+    onUpdate();
+  }));
   container.querySelector('#dutyColumnImport')?.addEventListener('click', () => showDutyTemplateImport(records, onUpdate));
   container.querySelector('#dutyDraftBtn')?.addEventListener('click', () => {
     if (!editable) return;
@@ -142,6 +196,13 @@ export function renderDutySystem(container, onUpdate = () => {}) {
     if (!createBalancedDraft(personnel, columns)) return showToast(t('dutySystem.draftFailed'), 'error');
     onUpdate();
     showToast(t('dutySystem.draftCreated'), 'success');
+  });
+  container.querySelector('#dutyAutoAssignBtn')?.addEventListener('click', () => {
+    if (!editable) return;
+    const assigned = autoAssignPersonnel(personnel, columns);
+    if (!assigned) return showToast(t('dutySystem.autoAssignNone'), 'error');
+    onUpdate();
+    showToast(t('dutySystem.autoAssignCreated', { count: assigned }), 'success');
   });
   container.querySelector('#dutyColumnAdd')?.addEventListener('click', () => {
     const service = container.querySelector('#dutyColumnService').value.trim();

@@ -1,0 +1,20 @@
+/* Isolated application surfaces: secondary menu actions never share the punch table. */
+#workspaceView.reports-only > #weekTabs,
+#workspaceView.reports-only > .legend-panel,
+#workspaceView.reports-only > #weekLabel,
+#workspaceView.reports-only > .table-wrap,
+#workspaceView.reports-only > #monthlyLabel,
+#workspaceView.reports-only > #bottomActions,
+#workspaceView.reports-only > #footerBar {
+  display: none !important;
+}
+
+#workspaceView.reports-only > #reportsPanel {
+  display: block !important;
+}
+
+@media (max-width: 700px) {
+  #workspaceView.reports-only > #reportsPanel {
+    margin-top: 0;
+  }
+}

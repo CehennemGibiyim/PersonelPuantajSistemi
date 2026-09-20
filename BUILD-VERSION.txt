@@ -1,0 +1,9 @@
+PERSONEL NÖBET + PUANTAJ SİSTEMİ
+Build ID: puantaj-20260920013009176
+Oluşturulma: 2026-09-20T01:30:09.176Z
+Kaynak modu: preview-workspace
+Kaynak dosyası: 88
+Başlangıç: index.html → main.js
+
+Bu dosya, ZIP arşivinin indirme sırasında güncel çalışma alanından oluşturulduğunu doğrulamak için eklenmiştir.
+Dosya bütünlük listesi BUILD-MANIFEST.json içindedir.

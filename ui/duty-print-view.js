@@ -2,7 +2,7 @@ import { getDutyRecords, getDutyColumns, getAdmins, getUnitName, getPersonnelLis
 import { getDaysInMonth, getMonth, getYear, MONTHS_TR, getFullDayName, isWeekend, isSaturday, isHoliday, t } from '../utils.js';
 import { showToast } from './toast-view.js';
 import { requestMonthlyNote } from './monthly-note-view.js';
-import { esc, effectiveColumns, formatColumn, recordMatchesColumn } from './duty-roster-utils.js?v=5';
+import { esc, effectiveColumns, formatColumn, recordMatchesColumn } from './duty-roster-utils.js?v=6';
 
 const number = value => Number(value) || 0;
 

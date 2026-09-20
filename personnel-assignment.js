@@ -1,12 +1,22 @@
 import { loadState, saveState } from './storage.js';
 import { getDaysInMonth, getMonth, getYear } from './utils.js';
+import { formatPersonnelName } from './name-format.js';
 
 function periodKey(unitId) {
   return `puantaj_${unitId}_${getYear()}_${getMonth()}`;
 }
 
-function ensurePerson(saved, name, type, updateExisting = false) {
+function normalizeSavedState(saved) {
   const next = saved && typeof saved === 'object' ? { ...saved } : {};
+  const remap = source => Object.fromEntries(Object.entries(source || {}).map(([key, value]) => [formatPersonnelName(key), value]));
+  next.personnelList = [...new Set((Array.isArray(next.personnelList) ? next.personnelList : []).map(formatPersonnelName).filter(Boolean))];
+  ['personnelTypes', 'scheduleData', 'weeklyTotals', 'nightHours', 'manualTotals', 'manualNightHours'].forEach(key => { next[key] = remap(next[key]); });
+  next.dutyRecords = Array.isArray(next.dutyRecords) ? next.dutyRecords.map(item => ({ ...item, person: formatPersonnelName(item?.person) })) : [];
+  return next;
+}
+
+function ensurePerson(saved, name, type, updateExisting = false) {
+  const next = normalizeSavedState(saved);
   const list = Array.isArray(next.personnelList) ? [...next.personnelList] : [];
   const types = { ...(next.personnelTypes || {}) };
   const schedule = { ...(next.scheduleData || {}) };
@@ -38,6 +48,7 @@ function ensurePerson(saved, name, type, updateExisting = false) {
 }
 
 async function syncUnits(name, type, unitIds, currentUnitId, updateExisting) {
+  name = formatPersonnelName(name);
   const targets = [...new Set((unitIds || []).map(String))].filter(id => id && id !== String(currentUnitId));
   const changed = [];
   for (const unitId of targets) {

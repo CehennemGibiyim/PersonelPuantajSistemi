@@ -1,0 +1,450 @@
+{
+  "format": 1,
+  "buildId": "puantaj-20260920013009176",
+  "createdAt": "2026-09-20T01:30:09.176Z",
+  "entryPoint": "index.html → main.js",
+  "sourceMode": "preview-workspace",
+  "projectFileCount": 88,
+  "files": [
+    {
+      "path": "index.html",
+      "bytes": 19266,
+      "sha256": "ce9fc813f0b37b3dc3974a04b9806d48fcccf6346bb4ae2dd09edb3cf41e150e"
+    },
+    {
+      "path": "boot-diagnostics.js",
+      "bytes": 2860,
+      "sha256": "8dc97662d223d8a973ebdddff6326d9344b2cd7ce2868e96ab936d7db28da2c0"
+    },
+    {
+      "path": "boot-entry.js",
+      "bytes": 792,
+      "sha256": "006e3b9b1dbdeee29622d5cf4a2913f26f5799959e7ac46f9156f08341ecde81"
+    },
+    {
+      "path": "styles.css",
+      "bytes": 25132,
+      "sha256": "22d5146a16d3da61fd02e133aaec3787892be613b43e62132334bc49ec6985b4"
+    },
+    {
+      "path": "duty-system.css",
+      "bytes": 30545,
+      "sha256": "f33d321bbc2b8a4c5e74cca4e8c0cfe217b4e15d17a61f9fbb959322b8d18842"
+    },
+    {
+      "path": "directory.css",
+      "bytes": 11628,
+      "sha256": "0e7791bd48bc0cedb58ba0250a1c3bd3ce494c6f4d229d441587c67d6f9d0183"
+    },
+    {
+      "path": "availability.css",
+      "bytes": 5597,
+      "sha256": "61df76decc85d4edb525281b7772e90b8b607ebfe07f70728566ba2756a8928d"
+    },
+    {
+      "path": "onboarding.css",
+      "bytes": 1031,
+      "sha256": "327123140fddae9e7fe7949a115ee686988c1629fc8299ce644f51fe3a7ae596"
+    },
+    {
+      "path": "polish.css",
+      "bytes": 23574,
+      "sha256": "605052223eaa3e136c3eccd0def8c23f61d3c9a8cab80c0b83c2ea0181f07f2b"
+    },
+    {
+      "path": "dashboard.css",
+      "bytes": 7872,
+      "sha256": "37f7721c8b28ce8e122bc2f815e1b1d78f1766f066cd18408378630cd8334bd2"
+    },
+    {
+      "path": "reports.css",
+      "bytes": 6644,
+      "sha256": "9448b4f0a7af0a72be03f328b25e67a7644be6860ec6f519ad25bd5f21ef6db2"
+    },
+    {
+      "path": "period-selector.css",
+      "bytes": 2049,
+      "sha256": "0d2c8cf777f0d001531b858fe22e07d58e29b9a4d8e0b0b424da3db065152844"
+    },
+    {
+      "path": "navigation.css",
+      "bytes": 604,
+      "sha256": "bb509fa4a905e316298a6366541811f59f768052c399fd9b05a7578fd1b00301"
+    },
+    {
+      "path": "templates-workspace.css",
+      "bytes": 3475,
+      "sha256": "7c6331db7890f0c9fff55e443457a8fcf27d421b7a8b46048f47e7b68ddf9db7"
+    },
+    {
+      "path": "desktop-window.css",
+      "bytes": 3240,
+      "sha256": "1b4b29e98eee0cb91c46402b146f37c06078090340eed802dc05d276cda9363d"
+    },
+    {
+      "path": "data-guard.js",
+      "bytes": 3607,
+      "sha256": "22b226c40a03c8aca50073bbb016bae4916f910ce514cd08cb06fabf18f48847"
+    },
+    {
+      "path": "package.json",
+      "bytes": 1085,
+      "sha256": "619807cc9c2ae7dd91f386f3938f23be5e2349f6dcfe3904e28cb7f2f519832b"
+    },
+    {
+      "path": "electron-main.cjs",
+      "bytes": 8670,
+      "sha256": "afdbb99d5956a1e76996420d952eefe85ce652bfa42b1fbe07c9b6010cfa16d4"
+    },
+    {
+      "path": "electron-preload.cjs",
+      "bytes": 605,
+      "sha256": "40aedf1c49333fd1758632100bc770bc510971b235234d5c6ad724988f7652ba"
+    },
+    {
+      "path": "desktop-i18n.js",
+      "bytes": 3974,
+      "sha256": "db2131c5e12c89b119782e5764ea60be67349b16f9a3c7fff05d78a41a493182"
+    },
+    {
+      "path": "WINDOWS-KURULUM.md",
+      "bytes": 6217,
+      "sha256": "a9fe4d8a2a8e4be5b7e0a038e6f5bcfd910ea6430942cbc02f72b0d7cd9f6715"
+    },
+    {
+      "path": "main.js",
+      "bytes": 25801,
+      "sha256": "b0c98586efa94659ff26541337ffd5d1cb0d51e04c4a726b38b9dee5e819086c"
+    },
+    {
+      "path": "excel-import.js",
+      "bytes": 6152,
+      "sha256": "ec3261058f2541e081c6b6527b640c4014a81ab7d28a4ed60a12740f77a00275"
+    },
+    {
+      "path": "leave-state.js",
+      "bytes": 7129,
+      "sha256": "f78c67dd960a1b787b3268b066466dd769fb19a7f5670987ee1ba83b4b40cb50"
+    },
+    {
+      "path": "state.js",
+      "bytes": 29594,
+      "sha256": "49b0a9a166530d586afff30373298a6fd3d9e893cbe7fdffa37d6e8aa931f908"
+    },
+    {
+      "path": "availability-state.js",
+      "bytes": 5045,
+      "sha256": "162826cf2d91a6254621b9a69393f6c406b4c715483dcbc11ee01e59228bb777"
+    },
+    {
+      "path": "duty-template-state.js",
+      "bytes": 2569,
+      "sha256": "2cb227b8e0e12435f69194894192b3ce84aea46c9bc8e12da5b29325869d5cdb"
+    },
+    {
+      "path": "period-lock-state.js",
+      "bytes": 2274,
+      "sha256": "5e3981c64eeef8f315ed2bcb33f58fab0eac805dd4137e23f13d74956558a208"
+    },
+    {
+      "path": "period-approval-state.js",
+      "bytes": 3282,
+      "sha256": "61f4a56697d4da84f61f500e1b7b8dd2f9ec91bbda45cc362f16d8c256fb4abb"
+    },
+    {
+      "path": "period-note-state.js",
+      "bytes": 867,
+      "sha256": "7fcf3420c9f32d1db2513f553f522eca476e7bec8afa5def6f31f7e2a7c4af09"
+    },
+    {
+      "path": "audit-state.js",
+      "bytes": 2768,
+      "sha256": "b068aac2b40f22e6052d7aa15d4a8a4698f0c480f0a8b95e8a1f57e8f431a991"
+    },
+    {
+      "path": "admin-state.js",
+      "bytes": 3509,
+      "sha256": "46cfdf0837d2c3674cfd2f1c642a8bd67a890f63036f27591d635afc0753d581"
+    },
+    {
+      "path": "duty-state.js",
+      "bytes": 8465,
+      "sha256": "1fc6f45199a8f07841163d66be71e682b721f55674d2e2a4ab7c5fcdaf69ce1d"
+    },
+    {
+      "path": "personnel-assignment.js",
+      "bytes": 3105,
+      "sha256": "cd9a45df3aac2f49dc8c6c519032224c61815665929141a2c498e76c3f9d301b"
+    },
+    {
+      "path": "personnel-network.js",
+      "bytes": 8990,
+      "sha256": "4b10216f3198c58841da34df5cbf5bb70fa3788288a8adb516a40a24c73a34b8"
+    },
+    {
+      "path": "personnel-photo-state.js",
+      "bytes": 2541,
+      "sha256": "9ce3e753865238e5dec047b64c95c8b4d29634cbd6577c48d16c44adc5cf3f98"
+    },
+    {
+      "path": "personnel-photo-service.js",
+      "bytes": 2425,
+      "sha256": "389e9a8cc652db645e7305e4d46b3438e60d510aecfe84437f8164d5ec9d997c"
+    },
+    {
+      "path": "name-format.js",
+      "bytes": 901,
+      "sha256": "e3842650d9f742e188730af116c6b34a239985b0d08c0b20518d933ac0a5cc5d"
+    },
+    {
+      "path": "storage.js",
+      "bytes": 711,
+      "sha256": "8250ca87a46bb6355d75d258feec954a4aea6ea056508bad3997cd7d7f837e55"
+    },
+    {
+      "path": "utils.js",
+      "bytes": 9695,
+      "sha256": "87b3ce978d01235f2e4faac771d62bf282bfe8a784a31be37f9b85ec9bd345dd"
+    },
+    {
+      "path": "export.js",
+      "bytes": 13725,
+      "sha256": "a5561a2e2b62ca929c4aed31bb4cb1ac850578666b5885cb281449a42c2f5285"
+    },
+    {
+      "path": "miniapp.i18n.json",
+      "bytes": 42,
+      "sha256": "592d86f57c1ef98fcf61c376fdbcf69f00a922fe13a783f58079a8389ca9d5b0"
+    },
+    {
+      "path": "locales/tr.json",
+      "bytes": 40206,
+      "sha256": "584baaccb07ede74f0adddd834e1ef131547b02e7138e6648289c216fc7f57be"
+    },
+    {
+      "path": "locales/en.json",
+      "bytes": 37977,
+      "sha256": "421bf7891d4892750316e2f9ab0c032628e0ec06884c188a349491d828d75b85"
+    },
+    {
+      "path": "ui/admin-modal-view.js",
+      "bytes": 5671,
+      "sha256": "5a2155bab1a3e36012a6d7c023ef145a77d40beb7d5332a3cddec2b65e6be9a0"
+    },
+    {
+      "path": "ui/advanced-panel-view.js",
+      "bytes": 24100,
+      "sha256": "c567fed1f124118386b3bf2eaf7f422e24d9bce62f5a5b130e26ac5884506222"
+    },
+    {
+      "path": "ui/onboarding-view.js",
+      "bytes": 1275,
+      "sha256": "05dddaa870868c921dea1bc1f8544c386971fc05c6b374df9e1ea0dfdda05762"
+    },
+    {
+      "path": "ui/dashboard-view.js",
+      "bytes": 6440,
+      "sha256": "6c0c19ba6f4140bb544abe0f34e6775035ce0a1dfaac11e73875d97e2b7d5374"
+    },
+    {
+      "path": "ui/favorites-view.js",
+      "bytes": 4342,
+      "sha256": "c56cd851e1a3d45e901f5ed5e9f49e08856b11833e8be2ad54e66e98e8930a70"
+    },
+    {
+      "path": "ui/security-status-view.js",
+      "bytes": 1541,
+      "sha256": "8a696cd453a84533bfe192ce4e4827fdb444e37f970ebd255d3ff6bf96bbcbad"
+    },
+    {
+      "path": "ui/startup-checks.js",
+      "bytes": 482,
+      "sha256": "8d6925c634d23e82f039a6e6de779ed9d8fc7edc972005edab93d0f1337c02c9"
+    },
+    {
+      "path": "ui/contact-panel-view.js",
+      "bytes": 2948,
+      "sha256": "0a2dff85999c9bc829cd1a53f57804b54bae0939ec24dcb2b40f320970734035"
+    },
+    {
+      "path": "ui/duty-panel-view.js",
+      "bytes": 5971,
+      "sha256": "3a2984c9c459f285e93c5c3ad1f24426e42d8f06a6fe431635e211c571130773"
+    },
+    {
+      "path": "ui/duty-print-view.js",
+      "bytes": 7908,
+      "sha256": "997f3ea279e510f8eef4c5790acb98763fb1b0bfa35373ca4636765439d4f686"
+    },
+    {
+      "path": "ui/duty-roster-utils.js",
+      "bytes": 4901,
+      "sha256": "338cb50cc57afc85b654f51f388710b3b707ff4978b580ef571fd81f514e1232"
+    },
+    {
+      "path": "ui/duty-conflict-utils.js",
+      "bytes": 3300,
+      "sha256": "9d5a760a0dc9f25cae73336a7833bdd2b42ae464eed84a0d0f392109a5118c44"
+    },
+    {
+      "path": "ui/duty-system-view.js",
+      "bytes": 20362,
+      "sha256": "77c81ab20e07b343ba38465ba6d65e3071bcb5188b94491571f965003edc7f49"
+    },
+    {
+      "path": "ui/duty-template-panel-view.js",
+      "bytes": 3430,
+      "sha256": "f32c71327b426a221e084058abef51851ef60a2aeff29d0eb1b897eaf8c21a51"
+    },
+    {
+      "path": "ui/duty-template-import-view.js",
+      "bytes": 7297,
+      "sha256": "46561cf0620d2c5c0eed3377a5aa4fd5c3413d85bffda58cf413b799e742ec0b"
+    },
+    {
+      "path": "ui/period-lock-panel-view.js",
+      "bytes": 3212,
+      "sha256": "91d4174bd953156431bb049cef7757f38cf79ab0c83f5739619f5594ced1bfc8"
+    },
+    {
+      "path": "ui/period-approval-panel-view.js",
+      "bytes": 5069,
+      "sha256": "ff9be335e2d0f8daf9e4faeb0f61e8960135cc2bd0e318c4ee1cb2834554595a"
+    },
+    {
+      "path": "ui/audit-panel-view.js",
+      "bytes": 2305,
+      "sha256": "53e94f11bb3c4bb988d4801513bdd2eb8d748b039533e62e2064844704e4f9b6"
+    },
+    {
+      "path": "ui/icons.js",
+      "bytes": 2544,
+      "sha256": "72fd4a81ccc0c1b3b9dc5af925cdbc442dc7e912fb4830ff8e5dc98fff866f6a"
+    },
+    {
+      "path": "ui/language-view.js",
+      "bytes": 3338,
+      "sha256": "873d578a50292fe58d5b4c9140a3c4907774f1e5c6d5f8caf4acb63593178076"
+    },
+    {
+      "path": "ui/modal-view.js",
+      "bytes": 11053,
+      "sha256": "7c31678c80684ef9c755b199cb6fd618a849f675abd29bfa9bc0855a12021d96"
+    },
+    {
+      "path": "ui/month-selector-view.js",
+      "bytes": 3001,
+      "sha256": "e5f3bfd4d00e94268a30490c05e87788360159a3f2064a4534fc60f591370929"
+    },
+    {
+      "path": "ui/monthly-table-view.js",
+      "bytes": 3653,
+      "sha256": "03b62e15d2a44c159b3684152e18dd6d8827bfd043dd92551390b653a542c25d"
+    },
+    {
+      "path": "ui/monthly-note-view.js",
+      "bytes": 2331,
+      "sha256": "2abb1930ec0a9f8bb21c29429ac184bd83d772149ff0d4b836fec9f60c1b3090"
+    },
+    {
+      "path": "ui/personnel-directory-view.js",
+      "bytes": 7183,
+      "sha256": "53a74d0767993302245a674a158e88099ba50ce726bd888d02b7294c784eccf1"
+    },
+    {
+      "path": "ui/personnel-attendance-view.js",
+      "bytes": 5053,
+      "sha256": "2ef3ba88eb970695d5a6e89322255399f262fe9148417e343a5d3e1713562c11"
+    },
+    {
+      "path": "ui/personnel-departments-view.js",
+      "bytes": 3430,
+      "sha256": "49ed3f8472cb62135a675abc1daf44c11e40029a0fafba44a326ce11a896073e"
+    },
+    {
+      "path": "ui/photo-crop-view.js",
+      "bytes": 4418,
+      "sha256": "77cbb8ebd2d9e98ff6c77981b50000c4940cde7ef7c9dc9a54bc258356c25a31"
+    },
+    {
+      "path": "ui/directory-print-view.js",
+      "bytes": 5666,
+      "sha256": "a0bf090ec916e43eb03edfcb12976eff52fe2582dbceae5b41c158f73a0f959c"
+    },
+    {
+      "path": "ui/personnel-detail-modal-view.js",
+      "bytes": 8669,
+      "sha256": "3270fc4552e201ec6d48308c145bc6bbb7bb62166ff8bfb61726abecc3edfd44"
+    },
+    {
+      "path": "ui/personnel-import-view.js",
+      "bytes": 12821,
+      "sha256": "55a04b680599e01617aede739148c7170e4d9d9c01118b1c1dd2af7b6d13f7bd"
+    },
+    {
+      "path": "ui/print-view.js",
+      "bytes": 15078,
+      "sha256": "10d0ae57d6fe8ae9341cce75cf92e0e9ba8946d338b879c27453d5008eeaea47"
+    },
+    {
+      "path": "ui/reports-panel-view.js",
+      "bytes": 21180,
+      "sha256": "f847ea15811808028467339a084bb05ae462b4a4ceb9c13d47fdd29b4f92ad0e"
+    },
+    {
+      "path": "ui/role-modal-view.js",
+      "bytes": 3214,
+      "sha256": "d716067e20d298ad3fba60359de8952c3e452f548da465ace05618ac15e6b9b9"
+    },
+    {
+      "path": "ui/sidebar-view.js",
+      "bytes": 6580,
+      "sha256": "ad2673cb1e4a621e829204a215cd843369724499a7016db444ef1a474a71ae11"
+    },
+    {
+      "path": "ui/swap-request-view.js",
+      "bytes": 6989,
+      "sha256": "bc74a5391311152f40b8c7a583cabfe2c8dbcc0dce34afcc6a62fb8bb34da6c7"
+    },
+    {
+      "path": "ui/tabs-view.js",
+      "bytes": 1040,
+      "sha256": "b0e017e746d42b00665bbfaff4da4001cc9dc8dd9da24c7f176c66c65be434c1"
+    },
+    {
+      "path": "ui/toast-view.js",
+      "bytes": 1803,
+      "sha256": "2abd140d7afd5df992d14740c0b6ff009980c983fc11d1c817310ce6965cd0b2"
+    },
+    {
+      "path": "ui/templates-workspace-view.js",
+      "bytes": 8478,
+      "sha256": "5e50400bd7b382d79689abc105d59d57b61621bb7e031fa7e568dd46075b880e"
+    },
+    {
+      "path": "ui/unit-modal-view.js",
+      "bytes": 5296,
+      "sha256": "6fe88c0b70dcc3002a05083c5c043dbc162a887e5f650f625d199abb7214720b"
+    },
+    {
+      "path": "ui/warnings-panel-view.js",
+      "bytes": 8337,
+      "sha256": "47e758cef89f22ad635e57fdadb931d7bdf8cf6e03536cfc72193e19c2cff289"
+    },
+    {
+      "path": "ui/availability-calendar-view.js",
+      "bytes": 7900,
+      "sha256": "314dfc911489c6366bc5e273e9002f840cbec47ec4b8c73075303418204cbde6"
+    },
+    {
+      "path": "ui/week-table-view.js",
+      "bytes": 17390,
+      "sha256": "2626e664a01c6af0564a02ab0b050bd69622c2185a19a837945f478b5e93104d"
+    },
+    {
+      "path": "project-download.js",
+      "bytes": 14962,
+      "sha256": "0b1a10725e26ee35a8410d0053a5ba390e6410917de3899878e8aa7898018cdd"
+    }
+  ]
+}

@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
-<head>
+<html lang="tr" data-theme="dark" dir="ltr" class=""><head><link rel="preload" href="_miniapp/i18n/manifest.json" as="fetch" type="application/json" crossorigin="anonymous">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -8,14 +7,499 @@
   <meta http-equiv="Expires" content="0">
   <title>Personel Nöbet + Puantaj Sistemi</title>
   <link rel="stylesheet" href="styles.css?v=24">
-  <link rel="stylesheet" href="duty-system.css?v=22">
-  <link rel="stylesheet" href="directory.css?v=5">
+  <link rel="stylesheet" href="duty-system.css?v=32">
+  <link rel="stylesheet" href="directory.css?v=7">
   <link rel="stylesheet" href="availability.css?v=2">
   <link rel="stylesheet" href="onboarding.css?v=1">
-  <link rel="stylesheet" href="polish.css?v=6">
-  <link rel="stylesheet" href="dashboard.css?v=3">
+  <link rel="stylesheet" href="polish.css?v=12">
+  <link rel="stylesheet" href="dashboard.css?v=4">
+  <link rel="stylesheet" href="reports.css?v=2">
+  <link rel="stylesheet" href="period-selector.css?v=2">
+  <link rel="stylesheet" href="navigation.css?v=1">
+  <link rel="stylesheet" href="templates-workspace.css?v=3">
+  <link rel="stylesheet" href="desktop-window.css?v=3">
 </head>
 <body>
+  <div id="bootScreen" class="boot-screen" role="status" aria-live="polite">
+    <div class="boot-screen__controls" aria-label="Pencere kontrolleri">
+      <button id="bootMinimizeBtn" type="button" aria-label="Küçült">−</button>
+      <button id="bootMaximizeBtn" type="button" aria-label="Büyüt">□</button>
+      <button id="bootCloseBtn" type="button" aria-label="Kapat">×</button>
+    </div>
+    <div class="boot-screen__card">
+      <div class="boot-screen__mark" aria-hidden="true">P</div>
+      <strong>Personel Nöbet + Puantaj Sistemi</strong>
+      <span>Uygulama başlatılıyor…</span>
+    </div>
+  </div>
+  <div id="bootError" hidden="" role="alert"></div>
+  
+<script>
+(function() {
+  'use strict';
+
+  // Prevent double-initialization
+  if (window.__miniappPreviewInstrumented) return;
+  window.__miniappPreviewInstrumented = true;
+
+  var MAX_MESSAGE_LENGTH = 2000;
+  var MAX_MESSAGES_PER_ENTRY = 10;
+  var MAX_BUFFER_ENTRIES = 500;
+
+  function generateSessionId() {
+    try {
+      if (window.crypto && window.crypto.getRandomValues) {
+        var bytes = new Uint8Array(16);
+        window.crypto.getRandomValues(bytes);
+        var hex = '';
+        for (var i = 0; i < bytes.length; i++) {
+          var h = bytes[i].toString(16);
+          if (h.length === 1) h = '0' + h;
+          hex += h;
+        }
+        return hex;
+      }
+    } catch (e) {}
+    return String(Date.now()) + '-' + Math.random().toString(16).slice(2);
+  }
+
+  var sessionId = generateSessionId();
+  var seq = 0;
+  var buffer = [];
+  // Set when signalReady() fires; null until then. Ships in the backlog
+  // snapshot so the builder can tell a booted app from a dead shell.
+  var readyAt = null;
+
+  // Boot snapshot computed at backlog-request time: visible text volume and
+  // interactive element count are the hardened boot criteria (an app with a
+  // silent console but ~0 text and 0 interactive elements is a broken shell).
+  function computeSnapshot() {
+    try {
+      return {
+        bodyTextChars: (document.body ? document.body.innerText.trim().length : 0),
+        interactiveCount: document.querySelectorAll('button, a[href], input, select, textarea, [role="button"]').length,
+        readyAt: readyAt
+      };
+    } catch (e) {
+      return { bodyTextChars: 0, interactiveCount: 0, readyAt: readyAt };
+    }
+  }
+
+  function clampBuffer() {
+    if (buffer.length > MAX_BUFFER_ENTRIES) {
+      buffer.splice(0, buffer.length - MAX_BUFFER_ENTRIES);
+    }
+  }
+
+  // Helper to safely stringify and truncate messages
+  function safeStringify(val) {
+    if (val === null) return 'null';
+    if (val === undefined) return 'undefined';
+    if (typeof val === 'string') {
+      return val.length > MAX_MESSAGE_LENGTH
+        ? val.slice(0, MAX_MESSAGE_LENGTH) + '...'
+        : val;
+    }
+    if (typeof val === 'number' || typeof val === 'boolean') {
+      return String(val);
+    }
+    if (val instanceof Error) {
+      return val.stack || val.message || String(val);
+    }
+    try {
+      var str = JSON.stringify(val, null, 2);
+      return str.length > MAX_MESSAGE_LENGTH
+        ? str.slice(0, MAX_MESSAGE_LENGTH) + '...'
+        : str;
+    } catch (e) {
+      try {
+        return String(val);
+      } catch (e2) {
+        return '[Unserializable]';
+      }
+    }
+  }
+
+  function postToParent(payload, targetOrigin) {
+    if (!window.parent || window.parent === window) return;
+    try {
+      window.parent.postMessage(payload, targetOrigin || '*');
+    } catch (e) {
+      // Silently ignore postMessage errors
+    }
+  }
+
+  function record(level, messages, meta) {
+    seq += 1;
+    var entry = {
+      type: 'miniapp-console',
+      sessionId: sessionId,
+      seq: seq,
+      level: level,
+      messages: messages,
+      ts: Date.now()
+    };
+    if (meta && typeof meta === 'object') {
+      entry.meta = meta;
+    }
+    buffer.push(entry);
+    clampBuffer();
+    postToParent(entry, '*');
+  }
+
+  function recordArgs(level, args, meta) {
+    var messages = [];
+    var len = Math.min(args.length, MAX_MESSAGES_PER_ENTRY);
+    for (var i = 0; i < len; i++) {
+      messages.push(safeStringify(args[i]));
+    }
+    if (args.length > MAX_MESSAGES_PER_ENTRY) {
+      messages.push('... and ' + (args.length - MAX_MESSAGES_PER_ENTRY) + ' more');
+    }
+    record(level, messages, meta);
+  }
+
+  // Save original console methods
+  var origLog = console.log;
+  var origWarn = console.warn;
+  var origError = console.error;
+
+  // Override console methods
+  console.log = function() {
+    recordArgs('log', arguments);
+    return origLog.apply(console, arguments);
+  };
+
+  console.warn = function() {
+    recordArgs('warn', arguments);
+    return origWarn.apply(console, arguments);
+  };
+
+  console.error = function() {
+    recordArgs('error', arguments);
+    return origError.apply(console, arguments);
+  };
+
+  function formatResourceTarget(target) {
+    try {
+      if (!target) return null;
+      var tag = (target.tagName || '').toString().toLowerCase();
+      var url = '';
+      if (tag === 'script') url = target.src || '';
+      else if (tag === 'link') url = target.href || '';
+      else if (tag === 'img') url = target.src || '';
+      else if (tag === 'audio' || tag === 'video') url = target.src || '';
+      else url = target.src || target.href || '';
+      return { tag: tag || 'unknown', url: url || '' };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function onCaptureError(event) {
+    try {
+      // Resource load errors: event.target is the element that failed to load.
+      if (event && event.target && event.target !== window) {
+        var info = formatResourceTarget(event.target);
+        if (info) {
+          record(
+            'error',
+            ['Resource failed to load: ' + info.tag + ' ' + info.url],
+            { kind: 'resource-error', tag: info.tag, url: info.url }
+          );
+          return;
+        }
+      }
+
+      // Some browsers also deliver ErrorEvent objects here.
+      if (event && typeof event.message === 'string') {
+        var message = event.message || 'Unknown error';
+        var source = event.filename || '';
+        var line = event.lineno || 0;
+        var col = event.colno || 0;
+        var stack = event.error && event.error.stack ? event.error.stack : '';
+
+        var errorMsg = message;
+        if (source) {
+          errorMsg += ' at ' + source;
+          if (line) {
+            errorMsg += ':' + line;
+            if (col) errorMsg += ':' + col;
+          }
+        }
+        if (stack && errorMsg.indexOf(stack) === -1) {
+          errorMsg += '\n' + stack;
+        }
+
+        record('error', [errorMsg], {
+          kind: 'js-error-event',
+          filename: source,
+          lineno: line,
+          colno: col
+        });
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  // Capture resource load errors (and some JS errors) in capture phase.
+  window.addEventListener('error', onCaptureError, true);
+
+  // Capture unhandled promise rejections
+  window.addEventListener('unhandledrejection', function(event) {
+    var reason = event.reason;
+    var message = 'Unhandled Promise Rejection: ';
+
+    if (reason instanceof Error) {
+      message += reason.stack || reason.message || String(reason);
+    } else {
+      message += safeStringify(reason);
+    }
+
+    record('error', [message], { kind: 'unhandledrejection' });
+  });
+
+  // Capture CSP violations when supported (JS-only)
+  try {
+    document.addEventListener('securitypolicyviolation', function(event) {
+      try {
+        var violated = event.violatedDirective || event.effectiveDirective || '';
+        var blocked = event.blockedURI || '';
+        var srcFile = event.sourceFile || '';
+        var line = event.lineNumber || 0;
+        var col = event.columnNumber || 0;
+        var sample = event.sample || '';
+        var msg = 'CSP Violation: ' + violated;
+        if (blocked) msg += ' blocked=' + blocked;
+        if (srcFile) {
+          msg += ' at ' + srcFile;
+          if (line) {
+            msg += ':' + line;
+            if (col) msg += ':' + col;
+          }
+        }
+        if (sample) msg += ' sample=' + sample;
+
+        record('error', [msg], {
+          kind: 'csp-violation',
+          violatedDirective: violated,
+          blockedURI: blocked,
+          sourceFile: srcFile,
+          lineNumber: line,
+          columnNumber: col,
+          disposition: event.disposition || ''
+        });
+      } catch (e) {}
+    });
+  } catch (e) {}
+
+  // Worker / SharedWorker error capture (best-effort)
+  function attachWorkerListeners(workerLike, scriptUrl, workerKind) {
+    if (!workerLike || !workerLike.addEventListener) return;
+    try {
+      workerLike.addEventListener('error', function(ev) {
+        try {
+          var msg = ev && ev.message ? String(ev.message) : 'Worker error';
+          var file = ev && ev.filename ? String(ev.filename) : '';
+          var line = ev && ev.lineno ? Number(ev.lineno) : 0;
+          var col = ev && ev.colno ? Number(ev.colno) : 0;
+          var stack = ev && ev.error && ev.error.stack ? String(ev.error.stack) : '';
+
+          var combined = msg;
+          if (file) {
+            combined += ' at ' + file;
+            if (line) {
+              combined += ':' + line;
+              if (col) combined += ':' + col;
+            }
+          }
+          if (stack && combined.indexOf(stack) === -1) {
+            combined += '\n' + stack;
+          }
+
+          record('error', [combined], {
+            kind: 'worker-error',
+            workerKind: workerKind,
+            scriptUrl: scriptUrl || ''
+          });
+        } catch (e) {}
+      });
+
+      workerLike.addEventListener('messageerror', function() {
+        record('error', ['Worker messageerror'], {
+          kind: 'worker-messageerror',
+          workerKind: workerKind,
+          scriptUrl: scriptUrl || ''
+        });
+      });
+    } catch (e) {}
+  }
+
+  var patchedWorkers = { worker: false, sharedworker: false };
+
+  function patchWorkerConstructor(name) {
+    try {
+      if (name === 'Worker' && patchedWorkers.worker) return;
+      if (name === 'SharedWorker' && patchedWorkers.sharedworker) return;
+
+      var Original = window[name];
+      if (typeof Original !== 'function') return;
+
+      function Patched(scriptURL, options) {
+        var instance = new Original(scriptURL, options);
+        try {
+          if (name === 'SharedWorker') {
+            attachWorkerListeners(instance, scriptURL, 'sharedworker');
+            if (instance.port) {
+              attachWorkerListeners(instance.port, scriptURL, 'sharedworker-port');
+            }
+          } else {
+            attachWorkerListeners(instance, scriptURL, 'worker');
+          }
+        } catch (e) {}
+        return instance;
+      }
+
+      Patched.prototype = Original.prototype;
+      try {
+        Object.setPrototypeOf(Patched, Original);
+      } catch (e) {}
+
+      window[name] = Patched;
+
+      if (name === 'Worker') patchedWorkers.worker = true;
+      if (name === 'SharedWorker') patchedWorkers.sharedworker = true;
+    } catch (e) {}
+  }
+
+  patchWorkerConstructor('Worker');
+  patchWorkerConstructor('SharedWorker');
+
+  // Handle screenshot requests from parent
+  var html2canvasPromise = null;
+
+  function ensureHtml2Canvas() {
+    if (typeof html2canvas === 'function') {
+      return Promise.resolve(html2canvas);
+    }
+    if (html2canvasPromise) return html2canvasPromise;
+
+    html2canvasPromise = new Promise(function(resolve, reject) {
+      try {
+        var script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+        script.async = true;
+        script.onload = function() {
+          if (typeof html2canvas === 'function') {
+            resolve(html2canvas);
+          } else {
+            reject(new Error('html2canvas loaded but not available'));
+          }
+        };
+        script.onerror = function() {
+          reject(new Error('Failed to load html2canvas'));
+        };
+        (document.head || document.documentElement || document.body).appendChild(script);
+      } catch (e) {
+        reject(e);
+      }
+    });
+
+    return html2canvasPromise;
+  }
+
+  window.addEventListener('message', function(event) {
+    // Only respond to parent window
+    if (event.source !== window.parent) return;
+
+    if (event.data && event.data.type === 'miniapp-parent-request-backlog') {
+      try {
+        postToParent({
+          type: 'miniapp-console-backlog',
+          sessionId: sessionId,
+          lastSeq: seq,
+          entries: buffer.slice(0),
+          snapshot: computeSnapshot(),
+          ts: Date.now()
+        }, event.origin || '*');
+      } catch (e) {}
+      return;
+    }
+
+    if (!event.data || event.data.type !== 'request-miniapp-screenshot') return;
+
+    // Check if html2canvas is available
+    // Capture screenshot
+    ensureHtml2Canvas()
+      .then(function() {
+        return html2canvas(document.body, {
+          useCORS: true,
+          allowTaint: true,
+          scale: window.devicePixelRatio || 1,
+          logging: false,
+          backgroundColor: null
+        });
+      })
+      .then(function(canvas) {
+        var dataUrl = canvas.toDataURL('image/png');
+        try {
+          event.source.postMessage({
+            type: 'miniapp-screenshot',
+            imageDataUrl: dataUrl,
+            ts: Date.now()
+          }, event.origin || '*');
+        } catch (e) {
+          try {
+            event.source.postMessage({
+              type: 'miniapp-screenshot-error',
+              error: 'Failed to send screenshot: ' + String(e)
+            }, event.origin || '*');
+          } catch (e2) {}
+        }
+      })
+      .catch(function(err) {
+        try {
+          event.source.postMessage({
+            type: 'miniapp-screenshot-error',
+            error: String(err)
+          }, event.origin || '*');
+        } catch (e) {}
+      });
+  });
+
+  // Signal that the preview is ready
+  function signalReady() {
+    try {
+      readyAt = Math.round(performance.now());
+    } catch (e) {}
+    if (!window.parent || window.parent === window) return;
+    try {
+      window.parent.postMessage({
+        type: 'miniapp-preview-ready',
+        sessionId: sessionId,
+        ts: Date.now()
+      }, '*');
+    } catch (e) {}
+  }
+
+  // Signal ready on DOMContentLoaded or immediately if already loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', signalReady);
+  } else {
+    // DOM already loaded, signal ready after a small delay to ensure scripts have run
+    setTimeout(signalReady, 100);
+  }
+})();
+</script><script src="https://miniapps.ai/sdk/miniapps-ai-v1.js"></script><script src="https://miniapps.ai/sdk/miniapp-i18n-v1.js"></script><script src="boot-diagnostics.js"></script>
+  <div class="desktop-titlebar" id="desktopTitlebar" aria-label="Uygulama penceresi">
+    <span class="desktop-titlebar__brand" data-i18n="app.title">Personel Nöbet + Puantaj Sistemi</span>
+    <div class="desktop-titlebar__controls">
+      <button class="desktop-titlebar__button" id="windowMinimizeBtn" type="button" data-i18n-aria-label="window.minimize" aria-label="Küçült">−</button>
+      <button class="desktop-titlebar__button" id="windowMaximizeBtn" type="button" data-i18n-aria-label="window.maximize" aria-label="Büyüt">□</button>
+      <button class="desktop-titlebar__button desktop-titlebar__button--close" id="windowCloseBtn" type="button" data-i18n-aria-label="window.close" aria-label="Kapat">×</button>
+    </div>
+  </div>
   <div class="app" id="screenView">
     <div class="app-layout">
       <aside class="sidebar" id="sidebar" aria-label="Sol menü"></aside>
@@ -23,33 +507,37 @@
       <main class="app-content">
         <div class="glass period-bar">
           <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Menüyü aç">☰</button>
-          <div class="period-control"><span id="unitIcon" aria-hidden="true"></span><div id="unitSelector"></div></div>
+          <div class="period-control"><span id="unitIcon" aria-hidden="true">🏥</span><div id="unitSelector"></div></div>
           <div class="divider-v"></div>
-          <div class="period-control"><span id="calendarIcon" aria-hidden="true"></span><div id="monthSelector"></div></div>
+          <div class="period-control"><span id="calendarIcon" aria-hidden="true">📅</span><div id="monthSelector"></div></div>
           <div class="period-spacer"></div>
           <button class="btn" id="roleBtn" data-i18n="app.roleBtn">Rol</button>
         </div>
-        <span id="appSubtitle" hidden aria-hidden="true"></span>
-        <div id="headerActions" hidden aria-hidden="true"></div>
-        <div id="viewToolbar" class="view-toolbar" data-i18n-aria-label="app.viewActions"></div>
+        <span id="appSubtitle" hidden="" aria-hidden="true"></span>
+        <div id="headerActions" hidden="" aria-hidden="true"></div>
+
+        <div id="viewToolbar" class="view-toolbar" data-i18n-aria-label="app.viewActions" aria-label="Görünüm işlemleri"></div>
         <div id="onboardingView" aria-live="polite"></div>
         <div id="dashboardView" aria-live="polite"></div>
+
         <div id="workspaceView">
           <div class="tabs" id="weekTabs" role="tablist"></div>
-          <div class="glass legend-panel"><div class="legend" id="legendContainer"></div><p class="legend-help" data-i18n="app.shiftCodes"></p></div>
-          <div class="section-title" id="weekLabel">1. HAFTA</div>
+          <div class="glass legend-panel"><div class="legend" id="legendContainer"></div><p class="legend-help" data-i18n="app.shiftCodes">Net hesap: G/N 8 brüt → 7,5 saat; G2/N2 12 brüt → 11 saat. Ara dinlenmesi net süreden düşülür. Nöbetler, nöbet tablosundaki saat aralığına göre G/G2 veya N/N2 kodu ve gerçek net saat olarak puantaja aktarılır.</p></div>
+          <div class="section-title" id="weekLabel" style="display: block;">1. Hafta — 1-6. günler</div>
           <div class="glass table-wrap" id="tableContainer"></div>
-          <div class="section-title" id="monthlyLabel" style="margin-top:16px" data-i18n="app.monthlySummary">AYLIK ÖZET</div>
-          <div class="glass table-wrap"><div id="monthlyContainer"></div></div>
+          <div class="section-title" id="monthlyLabel" style="margin-top: 16px; display: block;" data-i18n="app.monthlySummary">AYLIK ÖZET</div>
+          <div class="glass table-wrap"><div id="monthlyContainer" style="display: block;"></div></div>
           <div id="reportsPanel" style="display:none"></div>
           <div id="bottomActions" class="legacy-actions" aria-hidden="true"></div>
           <div id="footerBar" class="footer-bar"></div>
         </div>
+        <div id="templatesWorkspaceView" style="display:none" aria-live="polite"></div>
         <div id="dutySystemView" style="display:none"></div>
       </main>
     </div>
   </div>
   <div id="printView" class="print-view"></div>
-  <script type="module" src="main.js?v=44"></script>
-</body>
-</html>
+  <script type="module" src="main.js"></script>
+
+
+</body></html>

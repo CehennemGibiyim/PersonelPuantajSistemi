@@ -1,6 +1,7 @@
 import { saveState, loadState } from './storage.js';
 import { getDaysInMonth, getMonth, getYear } from './utils.js';
 import { getCurrentUnitId, getPersonnelList, getScheduleData, updateShift } from './state.js';
+import { formatPersonnelName } from './name-format.js';
 
 const STATUS_VALUES = new Set(['annual', 'sick', 'unpaid', 'unavailable', 'preferred']);
 const STATUS_CODES = { annual: 'İ', sick: 'R', unpaid: 'ÜY' };
@@ -16,7 +17,8 @@ function cleanData(value) {
   const people = new Set(getPersonnelList());
   const result = {};
   if (!value || typeof value !== 'object') return result;
-  Object.entries(value).forEach(([person, days]) => {
+  Object.entries(value).forEach(([rawPerson, days]) => {
+    const person = formatPersonnelName(rawPerson);
     if (!people.has(person) || !days || typeof days !== 'object') return;
     const validDays = {};
     Object.entries(days).forEach(([day, status]) => {
@@ -63,11 +65,11 @@ export async function initAvailability() {
 }
 
 export function getAvailabilityStatus(person, day) {
-  return availability[person]?.[String(day)] || 'available';
+  return availability[formatPersonnelName(person)]?.[String(day)] || 'available';
 }
 
 export function getAvailabilityForPerson(person) {
-  return { ...(availability[person] || {}) };
+  return { ...(availability[formatPersonnelName(person)] || {}) };
 }
 
 export function availabilityStatusForCode(value) {
@@ -92,8 +94,9 @@ export function setAvailabilityStatus(person, day, status) {
 // Takvimdeki geçici seçimleri tek seferde kaydeder; puantaj kodları ve toplamlar
 // yalnızca kullanıcı Kaydet düğmesine bastığında güncellenir.
 export function setAvailabilityStatuses(person, statuses) {
-  if (!getPersonnelList().includes(person)) return false;
-  const previous = getAvailabilityForPerson(person);
+  const normalizedPerson = formatPersonnelName(person);
+  if (!getPersonnelList().includes(normalizedPerson)) return false;
+  const previous = getAvailabilityForPerson(normalizedPerson);
   const next = {};
   if (statuses && typeof statuses === 'object') {
     Object.entries(statuses).forEach(([day, status]) => {
@@ -104,14 +107,14 @@ export function setAvailabilityStatuses(person, statuses) {
     });
   }
 
-  if (Object.keys(next).length) availability[person] = next;
-  else delete availability[person];
+  if (Object.keys(next).length) availability[normalizedPerson] = next;
+  else delete availability[normalizedPerson];
 
   for (let day = 1; day <= getDaysInMonth(); day += 1) {
     const key = String(day);
     const nextStatus = next[key] || 'available';
     const previousStatus = previous[key] || 'available';
-    if (nextStatus !== previousStatus) syncPunchCode(person, day, nextStatus, previousStatus);
+    if (nextStatus !== previousStatus) syncPunchCode(normalizedPerson, day, nextStatus, previousStatus);
   }
   persist();
   return true;

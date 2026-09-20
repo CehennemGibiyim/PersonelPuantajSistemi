@@ -1,3 +1,5 @@
+import { formatPersonnelName } from './name-format.js';
+
 const MAX_IMPORT_BYTES = 900 * 1024;
 const MAX_NODES = 50000;
 const MAX_PEOPLE = 500;
@@ -26,9 +28,14 @@ function validPerson(name) {
 
 function cleanSchedule(schedule, people) {
   if (!isObject(schedule)) return null;
+  const sourceByPerson = {};
+  Object.entries(schedule).forEach(([name, value]) => {
+    const person = formatPersonnelName(name);
+    if (person && !sourceByPerson[person]) sourceByPerson[person] = value;
+  });
   const result = {};
   for (const person of people) {
-    const source = schedule[person];
+    const source = sourceByPerson[person];
     if (!isObject(source)) {
       result[person] = {};
       continue;
@@ -49,8 +56,8 @@ function cleanDutyRecords(records, people) {
   return records.slice(0, 2500).filter(item => {
     const day = Number(item?.day);
     const gross = Number(item?.grossHours ?? item?.hours);
-    return isObject(item) && people.includes(String(item.person || '')) && Number.isInteger(day) && day >= 1 && day <= 31 && Number.isFinite(gross) && gross >= 0 && gross <= 48;
-  }).map(item => ({ ...item, person: String(item.person), day: Number(item.day) }));
+    return isObject(item) && people.includes(formatPersonnelName(item.person)) && Number.isInteger(day) && day >= 1 && day <= 31 && Number.isFinite(gross) && gross >= 0 && gross <= 48;
+  }).map(item => ({ ...item, person: formatPersonnelName(item.person), day: Number(item.day) }));
 }
 
 export function sanitizeSnapshot(input) {
@@ -58,14 +65,16 @@ export function sanitizeSnapshot(input) {
   const serialized = JSON.stringify(input);
   if (!serialized || serialized.length > MAX_IMPORT_BYTES) return null;
   if (!Array.isArray(input.personnelList)) return null;
-  const people = [...new Set(input.personnelList.filter(validPerson).map(name => name.trim()))];
+  const people = [...new Set(input.personnelList.filter(validPerson).map(formatPersonnelName).filter(Boolean))];
   if (!people.length || people.length > MAX_PEOPLE || people.length !== input.personnelList.length) return null;
   const scheduleData = cleanSchedule(input.scheduleData, people);
   if (!scheduleData) return null;
   const snapshot = JSON.parse(serialized);
   snapshot.personnelList = people;
   snapshot.scheduleData = scheduleData;
-  snapshot.personnelTypes = Object.fromEntries(people.map(name => [name, input.personnelTypes?.[name] === 'civil' ? 'civil' : 'worker']));
+  const rawTypes = {};
+  Object.entries(input.personnelTypes || {}).forEach(([name, type]) => { rawTypes[formatPersonnelName(name)] = type; });
+  snapshot.personnelTypes = Object.fromEntries(people.map(name => [name, rawTypes[name] === 'civil' ? 'civil' : 'worker']));
   snapshot.dutyRecords = cleanDutyRecords(input.dutyRecords, people);
   snapshot.dutyColumns = Array.isArray(input.dutyColumns) ? input.dutyColumns.slice(0, 50) : [];
   return snapshot;

@@ -2,6 +2,7 @@ import { loadState, saveState } from './storage.js';
 import { getCurrentUnitId, getPersonnelList } from './state.js';
 import { getAvailabilityStatus, setAvailabilityStatus } from './availability-state.js';
 import { getDaysInMonth, getMonth, getYear, uid } from './utils.js';
+import { formatPersonnelName } from './name-format.js';
 
 const LEAVE_TYPES = new Set(['annual', 'sick', 'unpaid']);
 const REQUEST_STATUSES = new Set(['pending', 'approved', 'rejected']);
@@ -24,7 +25,7 @@ function validIsoDate(value) {
 
 function cleanRequest(item) {
   if (!item || typeof item !== 'object') return null;
-  const person = String(item.person || '').trim();
+  const person = formatPersonnelName(item.person);
   const type = LEAVE_TYPES.has(item.type) ? item.type : '';
   const start = String(item.start || '');
   const end = String(item.end || '');

@@ -41,15 +41,6 @@
 .availability-day.is-pending { outline: 2px dashed rgba(255,255,255,.9); outline-offset: 1px; }
 .availability-day:focus-visible { outline: 3px solid rgba(125,211,252,.95); outline-offset: 2px; }
 .availability-footnote { margin-top: 12px; color: rgba(255,255,255,.4); font-size: 11px; line-height: 1.4; }
-[data-theme="light"] .availability-hint, [data-theme="light"] .availability-footnote, [data-theme="light"] .availability-weekdays span { color: rgba(23,32,51,.62); }
-[data-theme="light"] .availability-summary span, [data-theme="light"] .availability-day { color: #263449; background: rgba(255,255,255,.6); border-color: rgba(15,23,42,.14); }
-[data-theme="light"] .availability-summary strong, [data-theme="light"] .availability-day strong { color: #172033; }
-[data-theme="light"] .availability-day.availability-annual { color: #854d0e; background: rgba(250,204,21,.24); border-color: rgba(161,98,7,.62); box-shadow: inset 4px 0 0 #ca8a04, 0 0 0 1px rgba(161,98,7,.1); }
-[data-theme="light"] .availability-day.availability-sick { color: #991b1b; background: rgba(248,113,113,.2); border-color: rgba(185,28,28,.62); box-shadow: inset 4px 0 0 #dc2626, 0 0 0 1px rgba(185,28,28,.1); }
-[data-theme="light"] .availability-day.availability-unpaid { color: #6b21a8; background: rgba(192,132,252,.2); border-color: rgba(126,34,206,.55); box-shadow: inset 4px 0 0 #9333ea, 0 0 0 1px rgba(126,34,206,.1); }
-[data-theme="light"] .availability-day.availability-unavailable { color: #9f1239; background: rgba(251,113,133,.2); border-color: rgba(190,24,93,.58); box-shadow: inset 4px 0 0 #e11d48, 0 0 0 1px rgba(190,24,93,.1); }
-[data-theme="light"] .availability-day.availability-preferred { color: #047857; background: rgba(52,211,153,.2); border-color: rgba(4,120,87,.56); box-shadow: inset 4px 0 0 #059669, 0 0 0 1px rgba(4,120,87,.1); }
-[data-theme="light"] .availability-day.is-pending { outline-color: rgba(15,23,42,.7); }
 @media (max-width: 600px) {
   .availability-modal { width: 96%; padding: 16px; }
   .availability-controls { grid-template-columns: 1fr; }

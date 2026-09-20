@@ -10,5 +10,14 @@ contextBridge.exposeInMainWorld('desktopAPI', {
   },
   readFile(relativePath) {
     return ipcRenderer.sendSync('desktop-read-file', relativePath);
+  },
+  minimizeWindow() {
+    ipcRenderer.send('window-minimize');
+  },
+  toggleMaximizeWindow() {
+    ipcRenderer.send('window-toggle-maximize');
+  },
+  closeWindow() {
+    ipcRenderer.send('window-close');
   }
 });

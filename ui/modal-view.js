@@ -1,5 +1,8 @@
 import { addPersonnelToUnits, editPersonnel, deletePersonnel, personExists, getPersonnelType, getUnits, getCurrentUnitId } from '../state.js';
 import { t } from '../utils.js';
+import { renamePersonnelPhoto, removePersonnelPhoto } from '../personnel-photo-state.js';
+import { syncPersonnelDepartments, renamePersonnelMembership, removePersonnelFromDepartment } from '../personnel-network.js';
+import { formatPersonnelName } from '../name-format.js';
 
 const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
 
@@ -192,6 +195,9 @@ function wireFormEvents(mode) {
       if (e.key === 'Enter') handleConfirm(mode);
       if (e.key === 'Escape') hide();
     });
+    input.addEventListener('blur', () => {
+      if (input.value.trim()) input.value = formatPersonnelName(input.value);
+    });
     input.addEventListener('input', clearError);
   }
 
@@ -224,7 +230,7 @@ async function handleConfirm(mode) {
 
   if (mode === 'add') {
     const input = overlay.querySelector('#modalNameInput');
-    const name = input.value.trim();
+    const name = formatPersonnelName(input.value);
     if (!name) { showError(t('modal.nameRequired')); input.focus(); return; }
     if (personExists(name)) { showError(t('modal.nameDuplicate')); input.focus(); return; }
     const unitIds = getSelectedUnitIds();
@@ -233,6 +239,7 @@ async function handleConfirm(mode) {
     const confirm = overlay.querySelector('#modalConfirm');
     if (confirm) confirm.disabled = true;
     await addPersonnelToUnits(name, type, unitIds);
+    await syncPersonnelDepartments(name, type, unitIds, getCurrentUnitId(), getUnits());
     hide();
     if (onUpdate) onUpdate('add');
     if (afterAdd) afterAdd();
@@ -240,16 +247,20 @@ async function handleConfirm(mode) {
 
   } else if (mode === 'edit') {
     const input = overlay.querySelector('#modalNameInput');
-    const newName = input.value.trim();
+    const newName = formatPersonnelName(input.value);
     if (!newName) { showError(t('modal.nameRequired')); input.focus(); return; }
     if (newName !== currentName && personExists(newName)) { showError(t('modal.nameDuplicate')); input.focus(); return; }
     const type = getSelectedType();
     editPersonnel(currentName, newName, type);
+    await renamePersonnelPhoto(currentName, newName);
+    await renamePersonnelMembership(currentName, newName);
     hide();
     if (onUpdate) onUpdate('edit');
 
   } else if (mode === 'delete') {
     deletePersonnel(currentName);
+    await removePersonnelPhoto(currentName);
+    await removePersonnelFromDepartment(currentName, getCurrentUnitId());
     hide();
     if (onUpdate) onUpdate('delete');
   }
